@@ -73,7 +73,8 @@ def main():
         sys.exit("unreplaced placeholder remains in template")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(rendered, encoding="utf-8", newline="\n")
+    with OUT.open("w", encoding="utf-8", newline="\n") as file:
+        file.write(rendered)
     print(f"wrote {OUT.relative_to(ROOT)} ({len(ordered)} generation models)")
 
 

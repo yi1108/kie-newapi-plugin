@@ -50,9 +50,71 @@ export const meta = {
     results: {
       type: "number",
       unit: "count",
-      description: { en: "Generated file unit price", zh: "生成文件单价" },
+      description: { en: "Generated image/audio/tool file unit price", zh: "图像、音频与工具文件单价" },
+    },
+    seconds: {
+      type: "number",
+      unit: "second",
+      description: { en: "Video generation unit price", zh: "视频生成单价" },
+    },
+    resolution: {
+      enum: ["none", "360p", "480p", "512p", "540p", "720p", "768p", "1080p", "2k", "4k"],
+      enumLabels: {
+        none: { en: "None", zh: "无" },
+        "360p": { en: "360p", zh: "360p" },
+        "480p": { en: "480p", zh: "480p" },
+        "512p": { en: "512P", zh: "512P" },
+        "540p": { en: "540p", zh: "540p" },
+        "720p": { en: "720p", zh: "720p" },
+        "768p": { en: "768P", zh: "768P" },
+        "1080p": { en: "1080p", zh: "1080p" },
+        "2k": { en: "2K", zh: "2K" },
+        "4k": { en: "4K", zh: "4K" },
+      },
+      description: { en: "Output video resolution", zh: "输出视频分辨率" },
+    },
+    tier: {
+      enum: ["none", "standard", "lite", "fast", "turbo", "pro", "master", "ultra"],
+      enumLabels: {
+        none: { en: "None", zh: "无" },
+        standard: { en: "Standard", zh: "标准" },
+        lite: { en: "Lite", zh: "Lite" },
+        fast: { en: "Fast", zh: "Fast" },
+        turbo: { en: "Turbo", zh: "Turbo" },
+        pro: { en: "Pro", zh: "Pro" },
+        master: { en: "Master", zh: "Master" },
+        ultra: { en: "Ultra", zh: "Ultra" },
+      },
+      description: { en: "Product tier", zh: "产品档位" },
+    },
+    generate_audio: {
+      type: "boolean",
+      description: { en: "Whether audio is generated", zh: "是否生成音频" },
+    },
+    input_images: {
+      type: "number",
+      unit: "count",
+      description: { en: "Input image unit price", zh: "输入图片单价" },
+    },
+    input_video_seconds: {
+      type: "number",
+      unit: "second",
+      description: { en: "Input video unit price", zh: "输入视频单价" },
+    },
+    audio_characters: {
+      type: "number",
+      unit: "count",
+      description: { en: "Speech text character unit price", zh: "语音文本字符单价" },
     },
   },
+  usageExamples: [
+    { label: "1 image", facts: { results: 1, seconds: 0, resolution: "none", tier: "none", generate_audio: false, input_images: 0, input_video_seconds: 0, audio_characters: 0 } },
+    { label: "4 images", facts: { results: 4, seconds: 0, resolution: "none", tier: "none", generate_audio: false, input_images: 0, input_video_seconds: 0, audio_characters: 0 } },
+    { label: "720p standard 5s", facts: { results: 0, seconds: 5, resolution: "720p", tier: "standard", generate_audio: false, input_images: 0, input_video_seconds: 0, audio_characters: 0 } },
+    { label: "1080p pro 5s audio", facts: { results: 0, seconds: 5, resolution: "1080p", tier: "pro", generate_audio: true, input_images: 0, input_video_seconds: 0, audio_characters: 0 } },
+    { label: "4K 10s", facts: { results: 0, seconds: 10, resolution: "4k", tier: "ultra", generate_audio: false, input_images: 0, input_video_seconds: 0, audio_characters: 0 } },
+    { label: "TTS 500 characters", facts: { results: 1, seconds: 0, resolution: "none", tier: "none", generate_audio: false, input_images: 0, input_video_seconds: 0, audio_characters: 500 } },
+  ],
   routes: [
     { method: "POST", path: "/kie/api/v1/jobs/createTask", type: "submit", decode: "createJob", render: "jobCreated" },
     { method: "GET", path: "/kie/api/v1/jobs/recordInfo/:taskId", type: "query", taskIdParam: "taskId", render: "jobStatus" },
@@ -129,7 +191,7 @@ function actionFor(model, input) {
 }
 
 // Positive integer used to reserve quota at submit time; settled against the
-// real file count on completion.
+// real file count on completion for non-video models.
 function estimateResults(input) {
   for (const key of ["max_images", "num_images", "num_outputs", "n", "batch_size", "batch"]) {
     if (input[key] !== undefined && input[key] !== null && input[key] !== "") {
@@ -138,6 +200,158 @@ function estimateResults(input) {
     }
   }
   return 1;
+}
+
+const DEFAULT_VIDEO_SECONDS = 5;
+const MAX_ESTIMATED_VIDEO_SECONDS = 300;
+const DEFAULT_INPUT_VIDEO_SECONDS = 15;
+
+function firstPresent(input, keys) {
+  for (const key of keys) {
+    if (input[key] !== undefined && input[key] !== null && input[key] !== "") return input[key];
+  }
+  return undefined;
+}
+
+function estimateSecondsValue(value, fallback, maximum) {
+  if (value === undefined) return fallback;
+  if (Number(value) === -1) return maximum;
+  if (Array.isArray(value)) {
+    const sum = value.reduce(function (total, item) {
+      return total + estimateSecondsValue(item, 0, maximum);
+    }, 0);
+    return sum > 0 ? Math.min(sum, maximum) : fallback;
+  }
+  if (isPlainObject(value)) {
+    const nested = firstPresent(value, ["duration", "seconds", "duration_seconds", "length"]);
+    return estimateSecondsValue(nested, fallback, maximum);
+  }
+  const match = String(value).match(/\d+(?:\.\d+)?/);
+  if (!match) return fallback;
+  const seconds = Number(match[0]);
+  if (!Number.isFinite(seconds) || seconds <= 0) return fallback;
+  return Math.min(seconds, maximum);
+}
+
+function estimateVideoSeconds(model, input) {
+  if (Array.isArray(input.multi_prompt)) {
+    const total = input.multi_prompt.reduce(function (seconds, shot) {
+      return seconds + estimateSecondsValue(shot, 0, MAX_ESTIMATED_VIDEO_SECONDS);
+    }, 0);
+    if (total > 0) return Math.min(total, MAX_ESTIMATED_VIDEO_SECONDS);
+  }
+  const value = firstPresent(input, ["duration", "video_duration", "clip_duration", "seconds", "length"]);
+  if (value !== undefined) return estimateSecondsValue(value, DEFAULT_VIDEO_SECONDS, MAX_ESTIMATED_VIDEO_SECONDS);
+  if (/^hailuo\//.test(model)) return 6;
+  return DEFAULT_VIDEO_SECONDS;
+}
+
+function resolutionCandidate(input) {
+  const direct = firstPresent(input, ["resolution", "video_resolution", "output_resolution", "quality", "mode", "size", "scale"]);
+  if (direct !== undefined) return String(direct).toLowerCase();
+  const width = Number(firstPresent(input, ["width", "w"]));
+  const height = Number(firstPresent(input, ["height", "h"]));
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) return String(Math.max(width, height));
+  return "";
+}
+
+function normalizeResolution(model, input) {
+  const mode = trimmed(input.mode).toLowerCase();
+  if (mode === "std" || mode === "standard") return "720p";
+  if (mode === "pro") return "1080p";
+  if (mode === "4k" || mode === "uhd") return "4k";
+
+  const value = resolutionCandidate(input);
+  const numeric = value.match(/\d{3,4}/g) || [];
+  const maxDimension = numeric.reduce(function (max, item) { return Math.max(max, Number(item)); }, 0);
+  if (/\b(4k|uhd|2160p?)\b/i.test(value) || maxDimension >= 2160) return "4k";
+  if (/\b(2k|1440p?)\b/i.test(value) || maxDimension >= 1440) return "2k";
+  if (/\b(1080p?|fhd|full[ _-]?hd)\b/i.test(value) || maxDimension >= 1080) return "1080p";
+  if (/\b(768p?)\b/i.test(value) || maxDimension >= 768) return "768p";
+  if (/\b(720p?|hd)\b/i.test(value) || maxDimension >= 720) return "720p";
+  if (/\b(540p?)\b/i.test(value) || maxDimension >= 540) return "540p";
+  if (/\b(512p?)\b/i.test(value) || maxDimension >= 512) return "512p";
+  if (/\b(480p?|sd)\b/i.test(value) || maxDimension >= 480) return "480p";
+  if (/\b(360p?)\b/i.test(value) || maxDimension >= 360) return "360p";
+
+  if (/^wan\/3-0-video/.test(model)) return "1080p";
+  if (/^hailuo\//.test(model) || /^minimax-h3\//.test(model)) return "768p";
+  return "720p";
+}
+
+function normalizeTier(model, input) {
+  const raw = (trimmed(input.mode) || trimmed(input.tier) || trimmed(input.quality) || model).toLowerCase();
+  if (/\bmaster\b/.test(raw)) return "master";
+  if (/\bultra\b|\b4k\b/.test(raw)) return "ultra";
+  if (/\bpro\b/.test(raw)) return "pro";
+  if (/\bturbo\b/.test(raw)) return "turbo";
+  if (/\bfast\b/.test(raw)) return "fast";
+  if (/\blite\b|\bmini\b/.test(raw)) return "lite";
+  return "standard";
+}
+
+function truthyMediaAudio(model, input) {
+  const raw = firstPresent(input, ["generate_audio", "audio", "sound", "with_audio"]);
+  if (raw !== undefined) return raw === true || String(raw).toLowerCase() === "true" || String(raw) === "1";
+  if (/^wan\/3-0-video/.test(model)) return true;
+  if (/^kling-3\.0\//.test(model) && input.multi_shots === true) return true;
+  return false;
+}
+
+function countUrlsByKey(input, pattern) {
+  let count = 0;
+  const visit = function (value, key) {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) return value.forEach(function (item) { return visit(item, key); });
+    if (isPlainObject(value)) {
+      Object.keys(value).forEach(function (childKey) { return visit(value[childKey], childKey); });
+      return;
+    }
+    if (pattern.test(String(key || "")) && URL_RE.test(trimmed(value))) count++;
+  };
+  Object.keys(input).forEach(function (key) { return visit(input[key], key); });
+  return count;
+}
+
+function inputVideoSeconds(input) {
+  const explicit = firstPresent(input, ["input_video_seconds", "reference_video_seconds", "source_video_seconds"]);
+  if (explicit !== undefined) return estimateSecondsValue(explicit, 0, MAX_ESTIMATED_VIDEO_SECONDS);
+  const hasVideoUrl = countUrlsByKey(input, /video/i) > 0;
+  return hasVideoUrl ? DEFAULT_INPUT_VIDEO_SECONDS : 0;
+}
+
+function videoUsage(model, input) {
+  return {
+    seconds: estimateVideoSeconds(model, input),
+    resolution: normalizeResolution(model, input),
+    tier: normalizeTier(model, input),
+    generate_audio: truthyMediaAudio(model, input),
+    input_images: countUrlsByKey(input, /image|frame|photo|picture/i),
+    input_video_seconds: inputVideoSeconds(input),
+  };
+}
+
+function usageFor(model, input) {
+  if (categoryOf(model) === "video") return videoUsage(model, input);
+  if (categoryOf(model) === "audio") return audioUsage(input);
+  return { results: estimateResults(input) };
+}
+
+function audioText(input) {
+  const value = firstPresent(input, ["text", "prompt", "script", "dialogue"]);
+  if (Array.isArray(value)) return value.map(function (item) {
+    if (typeof item === "string") return item;
+    if (isPlainObject(item)) return trimmed(item.text || item.content || item.message);
+    return "";
+  }).join("\n");
+  return trimmed(value);
+}
+
+function audioUsage(input) {
+  const text = audioText(input);
+  const usage = { results: estimateResults(input) };
+  if (text) usage.audio_characters = Array.from(text).length;
+  return usage;
 }
 
 // ---------------------------------------------------------------------------
@@ -421,18 +635,24 @@ export function buildContentRequest(ctx) {
 }
 
 // ---------------------------------------------------------------------------
-// Usage (billed per delivered file)
+// Usage
 // ---------------------------------------------------------------------------
 
 export function extractUsage(ctx) {
   if (ctx.usagePurpose === "billing_ratios") return null;
   const job = isPlainObject(ctx.requestBody) ? ctx.requestBody : {};
-  return { results: estimateResults(isPlainObject(job.input) ? job.input : {}) };
+  const input = isPlainObject(job.input) ? job.input : {};
+  const model = resolveModel(ctx, job.model);
+  return usageFor(model, input);
 }
 
 export function extractUsageOnComplete(task, taskResult, body) {
   const data = recordData(body);
   if (!data) return null;
+  const model = trimmed(data.model);
+  // KIE records generally do not echo the original video duration/resolution.
+  // Return null for video completions so the host keeps the submit reservation.
+  if (model && categoryOf(model) === "video") return null;
   const parsed = safeParseData(data);
   // An unparseable result cannot establish the real count: keep the submit
   // reservation. A parsed success with zero URLs (e.g. human-identification)

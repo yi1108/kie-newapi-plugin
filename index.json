@@ -175,7 +175,7 @@
         {
           "version": "1.0.1",
           "path": "plugins/tasks/kie/1.0.1/plugin.js",
-          "sha256": "e01b181e890de74d29aebfef05747f0ec5dab15cbfe652726db20b19ebcc26e0",
+          "sha256": "ec30b79643d4d0e83ae27c0e83a2035bf5c129a5eba000a4c0d1c815464e4554",
           "minApiVersion": 1,
           "kind": "task",
           "baseUrl": "https://api.kie.ai",

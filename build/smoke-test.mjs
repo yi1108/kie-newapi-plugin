@@ -36,6 +36,11 @@ test("meta declares 141 generation models, no chat models", () => {
   assert.ok(plugin.meta.routes.length === 2);
   assert.ok(plugin.meta.protocols.some((p) => p.name === "openai_responses"));
   assert.ok(plugin.meta.protocols.includes("openai_video"));
+  const usageKeys = Object.keys(plugin.meta.usageSchema);
+  assert.ok(plugin.meta.usageExamples.length >= 1);
+  for (const example of plugin.meta.usageExamples) {
+    assert.deepEqual(Object.keys(example.facts).sort(), usageKeys.slice().sort(), "usage example must cover every schema field");
+  }
 });
 
 // --- native submit -----------------------------------------------------------
@@ -209,12 +214,42 @@ test("missing artifact throws artifact_not_found", () => {
 });
 
 // --- usage -------------------------------------------------------------------
-test("usage reserves at submit and settles on delivered files", () => {
+test("usage reserves image files, video facts, and speech characters", () => {
   const reserve = plugin.extractUsage(submitCtx("seedream/5-pro-text-to-image", { model: "seedream/5-pro-text-to-image", input: { max_images: 4 } }));
   assert.equal(reserve.results, 4);
   assert.equal(plugin.extractUsage(Object.assign(submitCtx("x", {}), { usagePurpose: "billing_ratios" })), null);
+  assert.deepEqual(plugin.extractUsage(submitCtx("kling-3.0/video", { model: "kling-3.0/video", input: { duration: 8, mode: "pro", sound: true } })), {
+    seconds: 8,
+    resolution: "1080p",
+    tier: "pro",
+    generate_audio: true,
+    input_images: 0,
+    input_video_seconds: 0,
+  });
+  assert.deepEqual(plugin.extractUsage(submitCtx("wan/3-0-video", { model: "wan/3-0-video", input: { duration: "10s", size: "3840x2160" } })), {
+    seconds: 10,
+    resolution: "4k",
+    tier: "standard",
+    generate_audio: true,
+    input_images: 0,
+    input_video_seconds: 0,
+  });
+  assert.deepEqual(plugin.extractUsage(submitCtx("hailuo/02-text-to-video-pro", { model: "hailuo/02-text-to-video-pro", input: {} })), {
+    seconds: 6,
+    resolution: "768p",
+    tier: "pro",
+    generate_audio: false,
+    input_images: 0,
+    input_video_seconds: 0,
+  });
+  assert.deepEqual(plugin.extractUsage(submitCtx("elevenlabs/text-to-speech-turbo-2-5", { model: "elevenlabs/text-to-speech-turbo-2-5", input: { text: "hello" } })), {
+    results: 1,
+    audio_characters: 5,
+  });
   const body = queryEnvelope("success", { resultJson: JSON.stringify({ resultUrls: ["https://a/1.png", "https://a/2.png"] }) });
   assert.deepEqual(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, body), { results: 2 });
+  const video = queryEnvelope("success", { model: "kling-3.0/video", resultJson: JSON.stringify({ resultUrls: ["https://a/v.mp4"] }) });
+  assert.equal(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, video), null);
   const none = queryEnvelope("success", { resultJson: JSON.stringify({ resultObject: { subject_status: 0 } }) });
   assert.deepEqual(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, none), { results: 0 });
   assert.equal(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, {}), null);

@@ -96,7 +96,9 @@ KIE 只接收 URL：先用 KIE 文件上传 API（`https://kieai.redpandaai.co/a
 ## 5. 产物与计费
 
 - 产物（图 / 视频 / 音频，含 Seedance 的首帧/尾帧、OmniHuman 抠像 mask）由网关按 artifact 代理转发，KIE 原始链接约 24 小时过期，请及时转存。
-- 计费单位 `results` = **实际交付的文件数**；提交时按 `max_images` / `n` / `batch_size` 等参数预占（默认 1，上限 8），完成后按真实数量结算。请在 New API 按 KIE 定价页为各模型配置单文件价格。
+- 图像 / 工具模型使用 `results` = **实际交付的文件数**；提交时按 `max_images` / `n` / `batch_size` 等参数预占（默认 1，上限 8），完成后按真实数量结算。
+- 视频模型使用组合用量：`seconds`、`resolution`、`tier`、`generate_audio`、`input_images`、`input_video_seconds`。插件根据 KIE 官方文档中的 `duration`、`resolution`、`mode`、`audio` / `sound`、参考图/视频等参数预占；例如 Kling 3.0 的 `mode=std/pro/4K` 映射到 720p/1080p/4K，Wan 3.0 默认 1080p 且默认带音频，Hailuo 默认 6 秒/768p。KIE 查询记录通常不回显原始视频参数，因此完成时保留提交预占用量。
+- 音频模型继续按 `results` 预占文件数；TTS / Dialogue 类模型会额外上报 `audio_characters`，由 `text` / `prompt` / `dialogue` 估算字符数。
 - `omnihuman-1-5/human-identification` 为纯文本结果（`resultObject.subject_status`），不计文件数。
 
 ## 6. KIE 错误码
@@ -165,7 +167,9 @@ Reference media is URL-only on KIE: upload first with the KIE File Upload API (f
 ## Artifacts & billing
 
 - Images, videos and audio — including Seedance first/last frames and OmniHuman masks — are served through gateway-proxied artifacts. Upstream content links expire in roughly 24 hours.
-- Billing unit `results` counts delivered files: reserved at submit from `max_images` / `n` / `batch_size` (default 1, capped at 8), settled to the real count on completion. Configure per-file model prices per the KIE pricing page.
+- Image and utility models use `results` for delivered files: reserved at submit from `max_images` / `n` / `batch_size` (default 1, capped at 8), settled to the real count on completion.
+- Video models use combined usage facts: `seconds`, `resolution`, `tier`, `generate_audio`, `input_images` and `input_video_seconds`. The plugin reserves usage from KIE's documented `duration`, `resolution`, `mode`, `audio` / `sound`, reference image and reference video parameters; for example, Kling 3.0 `mode=std/pro/4K` maps to 720p/1080p/4K, Wan 3.0 defaults to 1080p with audio, and Hailuo defaults to 6 seconds at 768p. KIE record responses usually do not echo the original video parameters, so completion keeps the submit reservation.
+- Audio models keep `results` for output files; TTS / Dialogue models also report `audio_characters` estimated from `text` / `prompt` / `dialogue`.
 - `omnihuman-1-5/human-identification` returns text only (`resultObject.subject_status`) and carries no file charge.
 - Permanent envelope errors (401/403/402/404/422/433/501/505) fail the task with the KIE message; transient ones (408/429/455/5xx) map to UNKNOWN and keep polling.
 
