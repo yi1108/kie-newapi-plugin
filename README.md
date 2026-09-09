@@ -112,15 +112,20 @@ KIE 只接收 URL：先用 KIE 文件上传 API（`https://kieai.redpandaai.co/a
 
 KIE 的 Claude / GPT / Gemini / Grok / Codex 等**同步对话**模型不是异步任务，New API 的任务插件体系不承载它们，请用原生通道接入：
 
-| 通道类型 | Base URL | 模型 |
-| --- | --- --- |
-| Anthropic | `https://api.kie.ai/claude` | claude-fable-5、claude-haiku-4-5、claude-opus-4-5/4-6/4-7/4-8/5、claude-sonnet-4-5/4-6/5 |
-| OpenAI（Codex Responses） | `https://api.kie.ai/codex` | gpt-5-4、gpt-5-5、gpt-5-6-luna/sol/terra、gpt-6-astra、gpt-codex、gpt-5.1/5.2/5.3/5.4-codex |
-| OpenAI（Chat） | `https://api.kie.ai/gpt-5-2` | gpt-5-2 |
-| OpenAI（Chat） | `https://api.kie.ai/gemini-3-pro` 等 | gemini-2.5-flash/pro、gemini-3-pro、gemini-3.1-pro、gemini-3-flash、gemini-3-5/3-6/3-7/3-8-flash-openai |
-| OpenAI（Responses） | `https://api.kie.ai/grok` | grok-4-3、grok-4-5、grok-4-6 |
+密钥统一填 KIE API Key。共 24 个文字模型、5 个端点：
 
-Claude Code 用户可将 `ANTHROPIC_BASE_URL` 指向 `https://api.kie.ai/claude`。具体模型名与可用性以 KIE 文档为准。
+| 通道类型 | Base URL | 协议 | 模型 |
+| --- | --- | --- | --- |
+| Anthropic | `https://api.kie.ai/claude` | Messages `/v1/messages` | claude-fable-5、claude-haiku-4-5、claude-opus-4-5/4-6/4-7/4-8/5、claude-sonnet-4-5/4-6/5（10） |
+| OpenAI | `https://api.kie.ai/codex` | **Responses** `/v1/responses` | gpt-5-4、gpt-5-5、gpt-5-6-luna/sol/terra、gpt-6-astra、gpt-5-codex、gpt-5.1/5.2/5.3/5.4-codex（11） |
+| OpenAI | `https://api.kie.ai/grok` | **Responses** `/v1/responses` | grok-4-3、grok-4-5、grok-4-6 |
+| OpenAI | `https://api.kie.ai/gpt-5-2` | Chat `/v1/chat/completions` | gpt-5-2 |
+| OpenAI | 每模型一个主机（见下） | Chat `/v1/chat/completions` | Gemini 全系 |
+
+Gemini 主机名与模型同名，按需为常用模型各建一个渠道：
+`gemini-2.5-flash`、`gemini-2.5-pro`、`gemini-3-pro`、`gemini-3.1.pro`、`gemini-3-flash` 对应 `https://api.kie.ai/<同名>`；3-5/3-6/3-7/3-8 Flash 用 OpenAI 兼容主机 `https://api.kie.ai/gemini-3-N-flash-openai`（模型名同为 `gemini-3-N-flash-openai`；不带 `-openai` 后缀的是 Google 原生协议）。
+
+注意：codex / grok 两个端点只说 Responses 协议，客户端需调用网关 `/v1/responses`；普通 Chat 客户端请用 gpt-5-2 或 Gemini 渠道。Claude Code 用户可将 `ANTHROPIC_BASE_URL` 指向 `https://api.kie.ai/claude`。具体模型名与可用性以 KIE 文档为准。
 
 ## 8. 开发
 
