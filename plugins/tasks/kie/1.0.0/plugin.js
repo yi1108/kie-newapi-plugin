@@ -1,0 +1,918 @@
+/**
+ * KIE.AI — New API task plugin (image / video / audio generation)
+ *
+ * KIE exposes every Market generation model behind one asynchronous job API:
+ *   Base URL   https://api.kie.ai
+ *   Auth       Authorization: Bearer <KIE API key>
+ *   Submit     POST /api/v1/jobs/createTask
+ *              { "model": "<vendor/model>", "callBackUrl"?: "...", "input": { ... } }
+ *              -> { "code": 200, "msg": "success", "data": { "taskId": "..." } }
+ *   Query      GET  /api/v1/jobs/recordInfo?taskId=<taskId>
+ *              data.state: waiting | queuing | generating | success | fail
+ *              data.resultJson (a JSON string, present on success):
+ *                { "resultUrls": ["https://..."] }                    // images / videos / audio
+ *                { "resultUrls": [], "firstFrameUrl": [], "lastFrameUrl": [] } // Seedance frames
+ *                { "resultObject": { ... } }                          // text / masks / status
+ *
+ * Because the upstream contract is already uniform, this plugin is a thin,
+ * generic bridge: it forwards the vendor `input` object verbatim and interprets
+ * the shared result envelope. One code path therefore covers every current and
+ * future KIE Market model without per-model request shaping. Model-specific
+ * parameters travel unchanged in `input`; reference images/videos are passed as
+ * URLs in the model's documented input fields (for example `image_urls`).
+ *
+ * KIE's synchronous chat models (Claude, GPT, Gemini, Grok, Codex) are not
+ * tasks and are not declared here; drive them with a native Anthropic / OpenAI
+ * channel. See README.md for the endpoint table.
+ *
+ * Bind a Task Plugin channel with task_plugin_key=kie and leave Base URL empty
+ * to use https://api.kie.ai.
+ */
+
+export const meta = {
+  apiVersion: 1,
+  key: "kie",
+  name: "KIE.AI",
+  icon: "text",
+  sortPriority: 50,
+  description: {
+    en: "KIE.AI image, video and audio generation (Seedream, Kling, Wan, Seedance, Hailuo, Nano Banana, Ideogram, ElevenLabs and more)",
+    zh: "KIE.AI 图像、视频与音频生成（即梦 Seedream、可灵 Kling、通义万相 Wan、Seedance、海螺、Nano Banana、Ideogram、ElevenLabs 等）",
+  },
+  version: "1.0.0",
+  author: { name: "community", url: "https://kie.ai" },
+  website: "https://kie.ai",
+  baseUrl: "https://api.kie.ai",
+  models: [
+    "bytedance/seedance-1.5-pro",
+    "bytedance/seedance-2",
+    "bytedance/seedance-2-5",
+    "bytedance/seedance-2-fast",
+    "bytedance/seedance-2-mini",
+    "bytedance/seedream",
+    "bytedance/seedream-v4-edit",
+    "bytedance/seedream-v4-text-to-image",
+    "bytedance/v1-lite-image-to-video",
+    "bytedance/v1-lite-text-to-video",
+    "bytedance/v1-pro-fast-image-to-video",
+    "bytedance/v1-pro-image-to-video",
+    "bytedance/v1-pro-text-to-video",
+    "elevenlabs/audio-isolation",
+    "elevenlabs/text-to-dialogue-v3",
+    "elevenlabs/text-to-speech-multilingual-v2",
+    "elevenlabs/text-to-speech-turbo-2-5",
+    "flux-2/flex-image-to-image",
+    "flux-2/flex-text-to-image",
+    "flux-2/pro-image-to-image",
+    "flux-2/pro-text-to-image",
+    "gemini-omni-video",
+    "google/gemini-3-1-flash-tts",
+    "google/gemini-omni-flash-1-1",
+    "google/imagen4",
+    "google/imagen4-fast",
+    "google/imagen4-ultra",
+    "google/nano-banana",
+    "google/nano-banana-edit",
+    "gpt-image-2-5-flare-image-to-image",
+    "gpt-image-2-5-flare-text-to-image",
+    "gpt-image-2-5-sunburst-image-to-image",
+    "gpt-image-2-5-sunburst-text-to-image",
+    "gpt-image-2-image-to-image",
+    "gpt-image-2-text-to-image",
+    "gpt-image/1.5-image-to-image",
+    "gpt-image/1.5-text-to-image",
+    "grok-imagine-image-2-0/image-edit",
+    "grok-imagine-image-2-0/segment-edit",
+    "grok-imagine-image-2-0/segment-map",
+    "grok-imagine-image-2-0/text-to-image",
+    "grok-imagine-video-1-5-preview",
+    "grok-imagine/extend",
+    "grok-imagine/image-to-image",
+    "grok-imagine/image-to-video",
+    "grok-imagine/text-to-image",
+    "grok-imagine/text-to-video",
+    "grok-imagine/upscale",
+    "hailuo/02-image-to-video-pro",
+    "hailuo/02-image-to-video-standard",
+    "hailuo/02-text-to-video-pro",
+    "hailuo/02-text-to-video-standard",
+    "hailuo/2-3-image-to-video-pro",
+    "hailuo/2-3-image-to-video-standard",
+    "happyhorse-1-1/image-to-video",
+    "happyhorse-1-1/reference-to-video",
+    "happyhorse-1-1/text-to-video",
+    "happyhorse/image-to-video",
+    "happyhorse/reference-to-video",
+    "happyhorse/text-to-video",
+    "happyhorse/video-edit",
+    "ideogram/character",
+    "ideogram/character-edit",
+    "ideogram/character-remix",
+    "ideogram/v3-edit",
+    "ideogram/v3-remix",
+    "ideogram/v3-text-to-image",
+    "infinitalk/from-audio",
+    "kling-2.6/image-to-video",
+    "kling-2.6/motion-control",
+    "kling-2.6/text-to-video",
+    "kling-3.0-omni/image-to-video",
+    "kling-3.0-omni/reference-to-video",
+    "kling-3.0-omni/text-to-video",
+    "kling-3.0-omni/transformation",
+    "kling-3.0/motion-control",
+    "kling-3.0/video",
+    "kling/ai-avatar-pro",
+    "kling/ai-avatar-standard",
+    "kling/v2-1-master-image-to-video",
+    "kling/v2-1-master-text-to-video",
+    "kling/v2-1-pro",
+    "kling/v2-1-standard",
+    "kling/v2-5-turbo-text-to-video-pro",
+    "kling/v3-turbo-image-to-video",
+    "kling/v3-turbo-text-to-video",
+    "minimax-h3/image-to-video",
+    "minimax-h3/reference-to-video",
+    "minimax-h3/text-to-video",
+    "nano-banana-2",
+    "nano-banana-2-lite",
+    "nano-banana-pro",
+    "omnihuman-1-5",
+    "omnihuman-1-5/human-identification",
+    "omnihuman-1-5/subject-detection",
+    "pixverse-v6/extend",
+    "pixverse-v6/image-to-video",
+    "pixverse-v6/reference-to-video",
+    "pixverse-v6/text-to-video",
+    "pixverse-v6/transition",
+    "qwen/image-edit",
+    "qwen/image-to-image",
+    "qwen/text-to-image",
+    "qwen2/image-edit",
+    "qwen3/image-to-image",
+    "qwen3/pro-image-to-image",
+    "qwen3/pro-text-to-image",
+    "qwen3/text-to-image",
+    "recraft/crisp-upscale",
+    "recraft/remove-background",
+    "seedream/4.5-edit",
+    "seedream/4.5-text-to-image",
+    "seedream/5-lite-image-to-image",
+    "seedream/5-lite-text-to-image",
+    "seedream/5-pro-image-to-image",
+    "seedream/5-pro-layer-decomposition",
+    "seedream/5-pro-text-to-image",
+    "topaz/image-upscale",
+    "topaz/video-upscale",
+    "volcengine/video-to-video-lip-sync",
+    "wan/2-2-a14b-image-to-video-turbo",
+    "wan/2-2-a14b-speech-to-video-turbo",
+    "wan/2-2-a14b-text-to-video-turbo",
+    "wan/2-2-animate-move",
+    "wan/2-2-animate-replace",
+    "wan/2-5-image-to-video",
+    "wan/2-5-text-to-video",
+    "wan/2-6-flash-image-to-video",
+    "wan/2-6-flash-video-to-video",
+    "wan/2-6-image-to-video",
+    "wan/2-6-text-to-video",
+    "wan/2-6-video-to-video",
+    "wan/2-7-image",
+    "wan/2-7-image-pro",
+    "wan/2-7-image-to-video",
+    "wan/2-7-r2v",
+    "wan/2-7-text-to-video",
+    "wan/2-7-videoedit",
+    "wan/3-0-video",
+    "wan/3-0-video-prime",
+    "z-image",
+  ],
+  fetchMode: "per_task",
+  auth: "api_key",
+  usageSchema: {
+    results: {
+      type: "number",
+      unit: "count",
+      description: { en: "Generated file unit price", zh: "生成文件单价" },
+    },
+  },
+  routes: [
+    { method: "POST", path: "/kie/api/v1/jobs/createTask", type: "submit", decode: "createJob", render: "jobCreated" },
+    { method: "GET", path: "/kie/api/v1/jobs/recordInfo", type: "query", taskIdParam: "taskId", render: "jobStatus" },
+  ],
+  protocols: [{ name: "openai_responses", supports: ["stream", "sync", "background"] }, "openai_video"],
+};
+
+// --- model catalog -----------------------------------------------------------
+// Generated from the KIE Market documentation. IMAGE/AUDIO/UTILITY are explicit
+// sets; every other declared model is treated as video, which is also the
+// fallback media class for extension-less temporary URLs.
+
+const IMAGE_MODELS = new Set([
+    "bytedance/seedream",
+    "bytedance/seedream-v4-edit",
+    "bytedance/seedream-v4-text-to-image",
+    "flux-2/flex-image-to-image",
+    "flux-2/flex-text-to-image",
+    "flux-2/pro-image-to-image",
+    "flux-2/pro-text-to-image",
+    "google/imagen4",
+    "google/imagen4-fast",
+    "google/imagen4-ultra",
+    "google/nano-banana",
+    "google/nano-banana-edit",
+    "gpt-image-2-5-flare-image-to-image",
+    "gpt-image-2-5-flare-text-to-image",
+    "gpt-image-2-5-sunburst-image-to-image",
+    "gpt-image-2-5-sunburst-text-to-image",
+    "gpt-image-2-image-to-image",
+    "gpt-image-2-text-to-image",
+    "gpt-image/1.5-image-to-image",
+    "gpt-image/1.5-text-to-image",
+    "grok-imagine-image-2-0/image-edit",
+    "grok-imagine-image-2-0/segment-edit",
+    "grok-imagine-image-2-0/segment-map",
+    "grok-imagine-image-2-0/text-to-image",
+    "grok-imagine/image-to-image",
+    "grok-imagine/text-to-image",
+    "ideogram/character",
+    "ideogram/character-edit",
+    "ideogram/character-remix",
+    "ideogram/v3-edit",
+    "ideogram/v3-remix",
+    "ideogram/v3-text-to-image",
+    "nano-banana-2",
+    "nano-banana-2-lite",
+    "nano-banana-pro",
+    "omnihuman-1-5/subject-detection",
+    "qwen/image-edit",
+    "qwen/image-to-image",
+    "qwen/text-to-image",
+    "qwen2/image-edit",
+    "qwen3/image-to-image",
+    "qwen3/pro-image-to-image",
+    "qwen3/pro-text-to-image",
+    "qwen3/text-to-image",
+    "recraft/crisp-upscale",
+    "recraft/remove-background",
+    "seedream/4.5-edit",
+    "seedream/4.5-text-to-image",
+    "seedream/5-lite-image-to-image",
+    "seedream/5-lite-text-to-image",
+    "seedream/5-pro-image-to-image",
+    "seedream/5-pro-layer-decomposition",
+    "seedream/5-pro-text-to-image",
+    "topaz/image-upscale",
+    "wan/2-7-image",
+    "wan/2-7-image-pro",
+    "z-image",
+  ]);
+const AUDIO_MODELS = new Set([
+    "elevenlabs/audio-isolation",
+    "elevenlabs/text-to-dialogue-v3",
+    "elevenlabs/text-to-speech-multilingual-v2",
+    "elevenlabs/text-to-speech-turbo-2-5",
+    "google/gemini-3-1-flash-tts",
+  ]);
+const UTILITY_MODELS = new Set([
+    "omnihuman-1-5/human-identification",
+  ]);
+
+const JOBS_PATH = "/api/v1/jobs/createTask";
+const RECORD_PATH = "/api/v1/jobs/recordInfo";
+const USER_AGENT = "kie-newapi-plugin/1.0.0";
+// KIE rejects tasks that produce more than a handful of files; cap the estimate.
+const MAX_ESTIMATED_RESULTS = 8;
+const URL_RE = /^https?:\/\/[^\s"']+$/i;
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+
+function trimmed(value) {
+  if (value === undefined || value === null) return "";
+  return String(value).trim();
+}
+
+function isPlainObject(value) {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function authHeaders(ctx, withJson) {
+  const headers = { Accept: "application/json", Authorization: "Bearer " + (ctx.apiKey || ""), "User-Agent": USER_AGENT };
+  if (withJson) headers["Content-Type"] = "application/json";
+  return headers;
+}
+
+function categoryOf(model) {
+  if (IMAGE_MODELS.has(model)) return "image";
+  if (AUDIO_MODELS.has(model)) return "audio";
+  if (UTILITY_MODELS.has(model)) return "utility";
+  return "video";
+}
+
+// Heuristic used only for the display `action`: does the request reference any
+// source media (image / frame / video / audio), making it an edit or i2v job?
+const REFERENCE_KEY_RE = /image|frame|video|audio|media|reference|mask|photo|picture/i;
+
+// KIE source media is always passed as URLs (upload first, then pass the
+// returned URL), so a non-empty string that is not a URL — or a number such as
+// max_images — never counts as a reference.
+function hasReferenceValue(value) {
+  if (typeof value === "string") return URL_RE.test(value.trim());
+  if (Array.isArray(value)) return value.some(hasReferenceValue);
+  if (isPlainObject(value)) return Object.keys(value).some(function (key) { return hasReferenceValue(value[key]); });
+  return false;
+}
+
+function hasReferenceInput(input) {
+  return Object.keys(input).some(function (key) {
+    return REFERENCE_KEY_RE.test(key) && hasReferenceValue(input[key]);
+  });
+}
+
+function actionFor(model, input) {
+  const category = categoryOf(model);
+  if (category === "audio") return "audio";
+  if (category === "utility") return "utility";
+  if (category === "image") return hasReferenceInput(input) ? "image_edit" : "text_to_image";
+  return hasReferenceInput(input) ? "image_to_video" : "text_to_video";
+}
+
+// Positive integer used to reserve quota at submit time; settled against the
+// real file count on completion.
+function estimateResults(input) {
+  for (const key of ["max_images", "num_images", "num_outputs", "n", "batch_size", "batch"]) {
+    if (input[key] !== undefined && input[key] !== null && input[key] !== "") {
+      const value = Number(input[key]);
+      if (Number.isInteger(value) && value > 0) return Math.min(value, MAX_ESTIMATED_RESULTS);
+    }
+  }
+  return 1;
+}
+
+// ---------------------------------------------------------------------------
+// Request normalization (shared by the native route and both host protocols)
+// ---------------------------------------------------------------------------
+
+function normalizeInput(value) {
+  if (value === undefined || value === null) return {};
+  if (!isPlainObject(value)) throw new Error("input must be an object");
+  // Shallow-clone so driver hooks never mutate the host-parsed request body.
+  return Object.assign({}, value);
+}
+
+function normalizeCallback(value) {
+  if (value === undefined || value === null) return "";
+  const url = trimmed(value);
+  if (!url) return "";
+  if (!/^https?:\/\//i.test(url)) throw new Error("callBackUrl must be an absolute http(s) URL");
+  return url;
+}
+
+// Resolve the vendor model id. A channel mapping is authoritative; without one
+// the client already sends the public KIE model id.
+function resolveModel(ctx, fallback) {
+  const clientModel = trimmed(ctx.model);
+  const upstreamModel = trimmed(ctx.upstreamModel);
+  const mapped = upstreamModel && upstreamModel !== clientModel ? upstreamModel : "";
+  const model = mapped || trimmed(fallback) || clientModel;
+  if (!model) throw new Error("model is required");
+  if (!/^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(model)) throw new Error("model is not a valid KIE model id: " + model);
+  return model;
+}
+
+// Produces the canonical {model, input, callBackUrl?} KIE createTask payload.
+function normalizeJob(ctx, value, modelFallback) {
+  if (!isPlainObject(value)) throw new Error("request body must be a JSON object");
+  const model = resolveModel(ctx, modelFallback !== undefined ? modelFallback : value.model);
+  const input = normalizeInput(value.input);
+  const job = { model: model, input: input };
+  const callBackUrl = normalizeCallback(value.callBackUrl);
+  if (callBackUrl) job.callBackUrl = callBackUrl;
+  return job;
+}
+
+// ---------------------------------------------------------------------------
+// Upstream record / result parsing
+// ---------------------------------------------------------------------------
+
+function recordData(body) {
+  if (isPlainObject(body) && isPlainObject(body.data)) return body.data;
+  return null;
+}
+
+function safeParseJson(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (isPlainObject(value) || Array.isArray(value)) return value;
+  if (typeof value !== "string") return null;
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return null;
+  }
+}
+
+function looksLikeUrl(value) {
+  return typeof value === "string" && URL_RE.test(value.trim());
+}
+
+function pushUrl(list, value, role) {
+  const url = trimmed(value);
+  if (url && URL_RE.test(url) && !list.some(function (item) { return item.url === url; })) list.push({ url: url, role: role });
+}
+
+// Walk a resultObject and surface any URL arrays/strings (e.g. mask_urls). The
+// key decides the media hint; unknown URLs keep the model-category fallback.
+function collectObjectUrls(obj, list, depth) {
+  if (depth > 6 || obj === null || obj === undefined) return;
+  if (typeof obj === "string") {
+    if (looksLikeUrl(obj)) pushUrl(list, obj, "object");
+    return;
+  }
+  if (Array.isArray(obj)) {
+    obj.forEach(function (item) { collectObjectUrls(item, list, depth + 1); });
+    return;
+  }
+  if (isPlainObject(obj)) {
+    Object.keys(obj).forEach(function (key) {
+      const value = obj[key];
+      if (/mask/i.test(key) && Array.isArray(value)) value.forEach(function (u) { return pushUrl(list, u, "object_image"); });
+      else collectObjectUrls(value, list, depth + 1);
+    });
+  }
+}
+
+// Returns {primary:[{url,role}], frames:[...], object:[...], resultObject}.
+function parseRecord(data) {
+  const out = { primary: [], frames: [], object: [], resultObject: null };
+  const parsed = safeParseData(data);
+  if (!isPlainObject(parsed)) return out;
+  const primary = Array.isArray(parsed.resultUrls) ? parsed.resultUrls : [];
+  primary.forEach(function (url) { pushUrl(out.primary, url, "primary"); });
+  ["firstFrameUrl", "lastFrameUrl"].forEach(function (key) {
+    const value = parsed[key];
+    (Array.isArray(value) ? value : []).forEach(function (url) { pushUrl(out.frames, url, "frame"); });
+  });
+  if (parsed.resultObject !== undefined && parsed.resultObject !== null) out.resultObject = parsed.resultObject;
+  collectObjectUrls(parsed.resultObject, out.object, 0);
+  return out;
+}
+
+function safeParseData(data) {
+  return safeParseJson(data ? data.resultJson : null);
+}
+
+const STATE_TO_STATUS = { waiting: "QUEUED", queuing: "QUEUED", queued: "QUEUED", generating: "IN_PROGRESS", processing: "IN_PROGRESS", running: "IN_PROGRESS", success: "SUCCESS", succeed: "SUCCESS", done: "SUCCESS", fail: "FAILURE", failed: "FAILURE", error: "FAILURE" };
+
+function progressPercent(data, status) {
+  const raw = Number(data && data.progress);
+  if (Number.isFinite(raw) && raw >= 0 && raw <= 100) return String(Math.round(raw)) + "%";
+  if (status === "SUCCESS") return "100%";
+  if (status === "IN_PROGRESS") return "50%";
+  if (status === "QUEUED") return "0%";
+  return "";
+}
+
+const IMAGE_MIME = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif", bmp: "image/bmp", svg: "image/svg+xml" };
+
+function imageMimeFor(url) {
+  const ext = url.split("?")[0].replace(/#.*$/, "").toLowerCase();
+  const match = /\.([a-z0-9]+)$/.exec(ext);
+  return match && IMAGE_MIME[match[1]] ? IMAGE_MIME[match[1]] : "";
+}
+
+// Assign stable, positional artifact keys. listArtifacts and buildContentRequest
+// both rebuild this ordering, so a key always resolves to the same URL.
+function artifactEntries(data, model) {
+  const category = categoryOf(model);
+  const parsed = parseRecord(data);
+  const entries = [];
+  const counts = { image: 0, video: 0, audio: 0 };
+
+  function typeFor(url, role) {
+    if (role === "frame" || role === "object_image") return "image";
+    const ext = url.split("?")[0].replace(/#.*$/, "").toLowerCase();
+    if (/\.(mp4|webm|mov|mkv|avi|m4v|m3u8)$/.test(ext)) return "video";
+    if (/\.(mp3|wav|ogg|oga|m4a|aac|flac)$/.test(ext)) return "audio";
+    if (/\.(png|jpe?g|webp|gif|bmp|svg)$/.test(ext)) return "image";
+    if (category === "audio") return "audio";
+    if (category === "image" || category === "utility") return "image";
+    return "video";
+  }
+
+  function add(url, role) {
+    const type = typeFor(url, role);
+    const key = type + "-" + counts[type]++;
+    const entry = { key: key, type: type, url: url, role: role };
+    if (type === "image") {
+      const mime = imageMimeFor(url);
+      if (mime) entry.mimeType = mime;
+    }
+    entries.push(entry);
+  }
+
+  parsed.primary.forEach(function (item) { add(item.url, item.role); });
+  parsed.frames.forEach(function (item) { add(item.url, item.role); });
+  parsed.object.forEach(function (item) { add(item.url, item.role); });
+  return entries;
+}
+
+function envelopeError(body) {
+  if (!isPlainObject(body)) return "";
+  if (body.code === undefined || body.code === null || Number(body.code) === 200) return "";
+  return trimmed(body.msg) || ("upstream error " + body.code);
+}
+
+// ---------------------------------------------------------------------------
+// Submit / query driver hooks
+// ---------------------------------------------------------------------------
+
+export function buildSubmitRequest(ctx) {
+  const job = normalizeJob(ctx, ctx.requestBody, (ctx.requestBody || {}).model);
+  return {
+    url: ctx.baseUrl + JOBS_PATH,
+    method: "POST",
+    headers: authHeaders(ctx, true),
+    body: job,
+    action: actionFor(job.model, job.input),
+  };
+}
+
+export function parseSubmitResponse(ctx, resp) {
+  const body = (resp && resp.body) || {};
+  const upstreamError = envelopeError(body);
+  if (upstreamError) throw new Error(upstreamError);
+  if (resp && Number(resp.statusCode) >= 400) throw new Error("KIE createTask failed with HTTP " + resp.statusCode);
+  const data = recordData(body);
+  const taskId = trimmed(data && data.taskId);
+  if (!taskId) throw new Error("upstream response did not include a task id");
+  return { taskId: taskId, taskData: body };
+}
+
+export function buildQueryRequest(ctx) {
+  const taskId = trimmed(ctx.taskId);
+  if (!taskId) throw new Error("taskId is empty");
+  return {
+    url: ctx.baseUrl + RECORD_PATH + "?taskId=" + encodeURIComponent(taskId),
+    method: "GET",
+    headers: authHeaders(ctx, false),
+  };
+}
+
+// KIE envelope codes seen when no task state is present. Permanent failures end
+// the task; transient ones return UNKNOWN so the host keeps polling.
+const HARD_CODES = { 401: 1, 402: 1, 403: 1, 404: 1, 422: 1, 433: 1, 501: 1, 505: 1 };
+
+function envelopeState(body, data) {
+  if (data && trimmed(data.state)) return "";
+  if (!isPlainObject(body) || body.code === undefined || Number(body.code) === 200) return "";
+  const code = Number(body.code);
+  const message = trimmed(body.msg) || ("upstream error " + code);
+  return HARD_CODES[code]
+    ? { status: "FAILURE", reason: message }
+    : { status: "UNKNOWN", reason: "Transient KIE error: " + message };
+}
+
+export function parseTaskResult(ctx, body) {
+  const data = recordData(body);
+  // Classify the envelope first: documented error bodies carry data:null,
+  // which must still terminate permanently on hard codes instead of polling.
+  const fallback = envelopeState(body, data);
+  if (fallback) return fallback;
+  if (!data) return { status: "UNKNOWN", reason: "Unrecognized KIE record response" };
+
+  const state = trimmed(data.state).toLowerCase();
+  if (state === "fail" || state === "failed" || state === "error") {
+    const failMsg = trimmed(data.failMsg);
+    const failCode = trimmed(data.failCode);
+    const reason = failMsg || (failCode ? "task failed, code: " + failCode : "task failed");
+    return { taskId: trimmed(data.taskId), status: "FAILURE", reason: reason };
+  }
+  const status = STATE_TO_STATUS[state];
+  if (!status) return { status: "UNKNOWN", reason: "Unrecognized KIE task state: " + (state || "(empty)") };
+  if (status !== "SUCCESS") {
+    return { taskId: trimmed(data.taskId), status: status, progress: progressPercent(data, status) };
+  }
+  return { taskId: trimmed(data.taskId), status: "SUCCESS", progress: "100%" };
+}
+
+// ---------------------------------------------------------------------------
+// Artifacts
+// ---------------------------------------------------------------------------
+
+function taskRecordData(task) {
+  const raw = task && task.data;
+  const data = recordData(raw);
+  return data || null;
+}
+
+export function listArtifacts(task) {
+  if (task.status !== "SUCCESS") return [];
+  const data = taskRecordData(task);
+  if (!data) return [];
+  // TaskView carries no model field; the KIE record echoes the requested model.
+  const model = trimmed(data.model);
+  return artifactEntries(data, model).map(function (entry) {
+    const artifact = { key: entry.key, type: entry.type };
+    if (entry.mimeType) artifact.mimeType = entry.mimeType;
+    return artifact;
+  });
+}
+
+export function buildContentRequest(ctx) {
+  const data = taskRecordData(ctx);
+  if (!data) throw new Error("artifact_not_found");
+  // The record's echoed model is authoritative so extension-less temporary
+  // URLs categorize identically in listArtifacts and this lookup.
+  const model = trimmed(data.model) || ctx.upstreamModel || ctx.model || "";
+  const match = artifactEntries(data, model).find(function (entry) { return entry.key === ctx.artifactKey; });
+  if (!match) throw new Error("artifact_not_found");
+  return { url: match.url, method: ctx.clientRequest.method, credentialless: true };
+}
+
+// ---------------------------------------------------------------------------
+// Usage (billed per delivered file)
+// ---------------------------------------------------------------------------
+
+export function extractUsage(ctx) {
+  if (ctx.usagePurpose === "billing_ratios") return null;
+  const job = isPlainObject(ctx.requestBody) ? ctx.requestBody : {};
+  return { results: estimateResults(isPlainObject(job.input) ? job.input : {}) };
+}
+
+export function extractUsageOnComplete(task, taskResult, body) {
+  const data = recordData(body);
+  if (!data) return null;
+  const parsed = safeParseData(data);
+  // An unparseable result cannot establish the real count: keep the submit
+  // reservation. A parsed success with zero URLs (e.g. human-identification)
+  // settles to zero files.
+  if (!isPlainObject(parsed)) return null;
+  const record = parseRecord(data);
+  const deliverables = record.primary.length || record.frames.length || record.object.length;
+  return { results: deliverables };
+}
+
+// ---------------------------------------------------------------------------
+// openai_responses protocol
+// ---------------------------------------------------------------------------
+
+function responsesInput(req) {
+  const texts = [];
+  const images = [];
+  const pushText = function (value) { if (trimmed(value)) texts.push(trimmed(value)); };
+
+  const visitPart = function (part) {
+    if (typeof part === "string") return pushText(part);
+    if (!isPlainObject(part)) return;
+    if ((part.type === "input_text" || part.type === "text" || part.type === "output_text") && typeof part.text === "string") pushText(part.text);
+    if (part.type === "input_image" || part.type === "image_url") {
+      let image = part.image_url;
+      if (isPlainObject(image)) image = image.url;
+      if (trimmed(image)) images.push(trimmed(image));
+    }
+  };
+
+  const input = req.input;
+  if (typeof input === "string") pushText(input);
+  else if (Array.isArray(input)) {
+    input.forEach(function (item) {
+      if (typeof item === "string") return pushText(item);
+      if (!isPlainObject(item)) return;
+      const content = item.content === undefined ? [item] : Array.isArray(item.content) ? item.content : [item.content];
+      content.forEach(visitPart);
+    });
+  }
+  return {
+    prompt: texts.join("\n"),
+    images: images.filter(function (url, index, all) { return all.indexOf(url) === index; }),
+  };
+}
+
+function protocolMetadata(req) {
+  if (req.metadata === undefined || req.metadata === null) return {};
+  if (!isPlainObject(req.metadata)) throw new Error("metadata must be an object");
+  if (req.metadata.input !== undefined && req.metadata.input !== null && !isPlainObject(req.metadata.input)) {
+    throw new Error("metadata.input must be an object");
+  }
+  return req.metadata;
+}
+
+function metadataInput(req) {
+  const metadata = protocolMetadata(req);
+  return isPlainObject(metadata.input) ? metadata.input : {};
+}
+
+function protocolCallback(req) {
+  const metadata = protocolMetadata(req);
+  return normalizeCallback(req.callBackUrl !== undefined ? req.callBackUrl : metadata.callBackUrl);
+}
+
+// Map an OpenAI-style request (Responses or Video) onto the KIE input object.
+// `image_urls` is the common reference field across KIE models; any other
+// model-specific parameter is supplied through metadata.input.
+function buildProtocolInput(req) {
+  const extracted = responsesInput(req);
+  const prompt = trimmed(req.prompt) || extracted.prompt;
+  const explicitImages = [];
+  (Array.isArray(req.images) ? req.images : []).forEach(function (url) { if (trimmed(url)) explicitImages.push(trimmed(url)); });
+  if (trimmed(req.image)) explicitImages.push(trimmed(req.image));
+  extracted.images.forEach(function (url) { if (explicitImages.indexOf(url) === -1) explicitImages.push(url); });
+
+  const input = Object.assign({}, metadataInput(req));
+  if (prompt && input.prompt === undefined) input.prompt = prompt;
+  if (explicitImages.length && input.image_urls === undefined) input.image_urls = explicitImages;
+  return input;
+}
+
+function escapeAttribute(value) {
+  return trimmed(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function artifactUrls(ctx, task) {
+  return listArtifacts(task).map(function (artifact) {
+    const served = ctx && ctx.artifacts && ctx.artifacts[artifact.key];
+    return { type: artifact.type, url: trimmed(served && served.url) };
+  }).filter(function (item) { return !!item.url; });
+}
+
+function mediaTags(ctx, task) {
+  return artifactUrls(ctx, task).map(function (item) {
+    const src = escapeAttribute(item.url);
+    if (item.type === "video") return '<video controls src="' + src + '"></video>';
+    if (item.type === "audio") return '<audio controls src="' + src + '"></audio>';
+    return '<img src="' + src + '" alt="generated image" />';
+  });
+}
+
+function resultText(ctx, task) {
+  const tags = mediaTags(ctx, task);
+  if (tags.length) return tags.join("\n\n");
+  const data = taskRecordData(task);
+  const parsed = data ? parseRecord(data) : null;
+  if (parsed && parsed.resultObject !== null && parsed.resultObject !== undefined) {
+    return "```json\n" + JSON.stringify(parsed.resultObject) + "\n```";
+  }
+  return "Generation completed, but no result URL was returned.";
+}
+
+export const protocols = {
+  openai_responses: {
+    decodeRequest: function (ctx) {
+      if (!ctx.body || ctx.body.kind !== "json") throw new Error("JSON body required");
+      const req = ctx.body.value;
+      if (!isPlainObject(req)) throw new Error("request body must be an object");
+      if (!trimmed(ctx.model)) throw new Error("model is required");
+      const input = buildProtocolInput(req);
+      const job = { model: trimmed(ctx.model), input: input };
+      const callBackUrl = protocolCallback(req);
+      if (callBackUrl) job.callBackUrl = callBackUrl;
+      // No display `action` here: the driver re-derives it after channel
+      // model_mapping, when the true upstream model is known.
+      return { kind: "submit", model: trimmed(ctx.model), requestBody: job };
+    },
+
+    renderEvents: function (ctx, task, previousState) {
+      const status = String(task.status || "UNKNOWN").toUpperCase();
+      const value = Number(String(task.progress || "").replace("%", ""));
+      const progress = Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
+      const state = { status: status, progress: progress };
+
+      if (status === "SUCCESS") {
+        const text = resultText(ctx, task);
+        const events = previousState && previousState.status === status ? [] : [{ type: "output", data: text }];
+        return { events: events, state: state, done: true };
+      }
+      if (status === "FAILURE") {
+        return { events: [{ type: "error", code: "task_failed", message: task.fail_reason || "task failed" }], state: state, done: true };
+      }
+      if (previousState && previousState.status === status && previousState.progress === progress) return { events: [], state: state, done: false };
+      const event = { type: "progress", message: status.toLowerCase() };
+      if (progress !== null) event.progress = progress;
+      return { events: [event], state: state, done: false };
+    },
+
+    renderFinal: function (ctx, task) {
+      return {
+        output: [{ type: "message", status: "completed", role: "assistant", content: [{ type: "output_text", text: resultText(ctx, task), annotations: [], logprobs: [] }] }],
+        metadata: { vendor: "kie" },
+      };
+    },
+  },
+
+  openai_video: {
+    decodeRequest: function (ctx) {
+      let req;
+      if (ctx.body && ctx.body.kind === "json") {
+        req = ctx.body.value;
+      } else if (ctx.body && ctx.body.kind === "multipart") {
+        req = {};
+        if ((ctx.body.files || []).length) throw new Error("KIE accepts reference media as URLs, not file uploads; upload first and pass the returned URL");
+        const first = function (name) {
+          const values = (ctx.body.fields || {})[name] || [];
+          if (values.length > 1) throw new Error(name + " must be provided once");
+          return values[0];
+        };
+        Object.keys(ctx.body.fields || {}).forEach(function (name) {
+          if (name === "images") req.images = (ctx.body.fields[name] || []).slice();
+          else req[name] = first(name);
+        });
+        if (req.metadata !== undefined) {
+          const parsed = safeParseJson(req.metadata);
+          if (!isPlainObject(parsed)) throw new Error("metadata must be a JSON object string");
+          req.metadata = parsed;
+        }
+      } else {
+        throw new Error("JSON or multipart body required");
+      }
+      if (!isPlainObject(req)) throw new Error("request body must be an object");
+      if (!trimmed(ctx.model)) throw new Error("model is required");
+      const input = buildProtocolInput(req);
+      const job = { model: trimmed(ctx.model), input: input };
+      const callBackUrl = protocolCallback(req);
+      if (callBackUrl) job.callBackUrl = callBackUrl;
+      return { kind: "submit", model: trimmed(ctx.model), requestBody: job };
+    },
+
+    render: function (ctx, task) {
+      const data = taskRecordData(task) || {};
+      const state = trimmed(data.state).toLowerCase();
+      const statuses = { waiting: "queued", queuing: "queued", queued: "queued", generating: "in_progress", processing: "in_progress", running: "in_progress", success: "completed", succeed: "completed", done: "completed", fail: "failed", failed: "failed", error: "failed" };
+      const taskStatus = String(task.status || "").toUpperCase();
+      const fallbackStatus = { SUCCESS: "completed", FAILURE: "failed", IN_PROGRESS: "in_progress", QUEUED: "queued", SUBMITTED: "queued", NOT_START: "queued" };
+      const output = {
+        id: task.task_id,
+        object: "video",
+        model: trimmed(data.model),
+        status: statuses[state] || fallbackStatus[taskStatus] || "unknown",
+        progress: Number(String(task.progress || "0").replace("%", "")) || 0,
+        created_at: task.created_at,
+        completed_at: task.updated_at,
+      };
+      if (task.status === "SUCCESS") {
+        const entries = artifactEntries(data, trimmed(data.model));
+        const videos = entries.filter(function (entry) { return entry.type === "video"; });
+        // Video models list video files only (frames stay artifacts). Models
+        // whose media is an image or audio surface those primary URLs instead,
+        // since the video object is the only result channel on this protocol.
+        const shown = videos.length ? videos : entries.filter(function (entry) { return entry.role === "primary"; });
+        const urls = shown.map(function (entry) { return entry.url; });
+        if (urls.length) {
+          output.url = urls[0];
+          output.urls = urls;
+        }
+      } else if (task.status === "FAILURE") {
+        output.error = { code: trimmed(data.failCode) || "generation_failed", message: task.fail_reason || trimmed(data.failMsg) || "task failed" };
+      }
+      return output;
+    },
+  },
+};
+
+// ---------------------------------------------------------------------------
+// Native surface
+// ---------------------------------------------------------------------------
+
+const NATIVE_STATE = { SUBMITTED: "waiting", QUEUED: "queuing", IN_PROGRESS: "generating", SUCCESS: "success", FAILURE: "fail", NOT_START: "waiting", UNKNOWN: "waiting" };
+
+function nativeRecord(task) {
+  const raw = isPlainObject(task.data) ? task.data : {};
+  const source = isPlainObject(raw.data) ? raw.data : {};
+  const data = Object.assign({}, source, { taskId: task.task_id });
+  if (!trimmed(data.state)) {
+    const status = String(task.status || "").toUpperCase();
+    data.state = NATIVE_STATE[status] || status.toLowerCase();
+    if (data.state === "fail") {
+      if (!trimmed(data.failMsg)) data.failMsg = task.fail_reason || trimmed(raw.msg) || "task failed";
+      if (!trimmed(data.failCode) && raw.code !== undefined && raw.code !== null && Number(raw.code) !== 200) {
+        data.failCode = String(raw.code);
+      }
+    }
+  }
+  return { code: raw.code !== undefined && raw.code !== null ? Number(raw.code) : 200, msg: trimmed(raw.msg) || "success", data: data };
+}
+
+export const native = {
+  createJob: function (ctx) {
+    if (!ctx.body || ctx.body.kind !== "json") throw new Error("JSON body required");
+    const value = ctx.body.value;
+    if (!isPlainObject(value)) throw new Error("request body must be a JSON object");
+    const job = normalizeJob(ctx, value, value.model);
+    // The driver descriptor supplies the post-model_mapping display action.
+    return { kind: "submit", model: job.model, requestBody: job };
+  },
+
+  jobCreated: function (ctx, task) {
+    return { code: 200, msg: "success", data: { taskId: task.task_id } };
+  },
+
+  jobStatus: function (ctx, task) {
+    return nativeRecord(task);
+  },
+
+  error: function (ctx, error) {
+    let code = parseInt(error && error.code, 10);
+    if (!Number.isFinite(code)) code = (error && error.httpStatus) || 400;
+    return { code: code, msg: (error && error.message) || "error", data: null };
+  },
+};

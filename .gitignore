@@ -1,0 +1,11 @@
+# Whitelist publish policy: the marketplace repository only ships the plugin,
+# its index, and the build tooling. Downloaded upstream docs/reference material
+# and local scratch artifacts stay out of the published repo.
+/*
+!/.gitignore
+!/README.md
+!/index.json
+!/plugins/
+!/build/
+
+/build/live-out/
