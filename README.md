@@ -34,6 +34,8 @@ https://raw.githubusercontent.com/<owner>/<repo>/main/index.json
 4. Base URL 留空即使用默认的 `https://api.kie.ai`。
 5. 启用需要的模型（141 个模型均已声明）。
 
+> ⚠️ 渠道页的「测试」按钮对任务插件渠道固定返回 **Task Plugin channel test is not supported**——这是 New API 核心的设计（Midjourney / Suno / Kling / 即梦等所有异步任务渠道都一样），不代表配置有误。验证渠道请直接提交一次真实任务（见下节）。
+
 ## 3. 调用方式
 
 ### 3.1 原生 KIE 兼容端点（现有 KIE 集成可直接换域名）
@@ -144,6 +146,8 @@ Every KIE Market model shares the same `createTask` / `recordInfo` contract, so 
 ## Bind a channel
 
 Create a **Task Plugin** channel (type 61), set `task_plugin_key=kie`, paste your KIE API key (<https://kie.ai/api-key>), and leave Base URL empty to default to `https://api.kie.ai`.
+
+> ⚠️ The channel **Test** button always returns *Task Plugin channel test is not supported* for type-61 channels. This is by design in New API core (same for Midjourney/Suno/Kling/Jimeng and every other async task channel) — it is not a configuration error. Verify the channel by submitting a real task instead.
 
 ## Calling the plugin
 
