@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const pluginPath = path.join(here, "..", "plugins", "tasks", "kie", "1.0.0", "plugin.js");
+const pluginPath = path.join(here, "..", "plugins", "tasks", "kie", "1.0.1", "plugin.js");
 const plugin = await import(pathToFileURL(pluginPath).href);
 const models = createRequire(import.meta.url)("./models.json");
 
@@ -24,7 +24,9 @@ const KEY = "test-key";
 test("meta declares 141 generation models, no chat models", () => {
   assert.equal(plugin.meta.apiVersion, 1);
   assert.equal(plugin.meta.key, "kie");
-  assert.equal(plugin.meta.version, "1.0.0");
+  assert.equal(plugin.meta.version, "1.0.1");
+  const queryRoute = plugin.meta.routes.find((r) => r.type === "query");
+  assert.match(queryRoute.path, /:taskId$/);
   assert.equal(plugin.meta.fetchMode, "per_task");
   assert.equal(plugin.meta.baseUrl, BASE);
   const generation = [...models.image, ...models.video, ...models.audio, ...models.utility];

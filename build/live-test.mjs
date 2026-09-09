@@ -13,7 +13,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(here, "..");
-const plugin = await import(pathToFileURL(path.join(root, "plugins", "tasks", "kie", "1.0.0", "plugin.js")).href);
+const plugin = await import(pathToFileURL(path.join(root, "plugins", "tasks", "kie", "1.0.1", "plugin.js")).href);
 
 const apiKey = process.env.KIE_API_KEY || "";
 if (!apiKey) {

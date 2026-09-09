@@ -24,7 +24,7 @@ https://raw.githubusercontent.com/<owner>/<repo>/main/index.json
 
 ### 方式 B：手动上传
 
-上传 `plugins/tasks/kie/1.0.0/plugin.js`，图标可选 `plugins/tasks/kie/icon.svg`。
+上传 `plugins/tasks/kie/1.0.1/plugin.js`，图标可选 `plugins/tasks/kie/icon.svg`。
 
 ## 2. 绑定渠道
 
@@ -50,7 +50,7 @@ curl -X POST "$NEWAPI/kie/api/v1/jobs/createTask" \
 # -> { "code": 200, "msg": "success", "data": { "taskId": "..." } }
 
 # 查询任务
-curl "$NEWAPI/kie/api/v1/jobs/recordInfo?taskId=<taskId>" \
+curl "$NEWAPI/kie/api/v1/jobs/recordInfo/<taskId>" \
   -H "Authorization: Bearer $NEWAPI_TOKEN"
 ```
 
@@ -139,7 +139,7 @@ Every KIE Market model shares the same `createTask` / `recordInfo` contract, so 
 ## Install
 
 - **Third-party marketplace:** add the raw URL of this repository's `index.json` as a plugin source, then install **KIE.AI** (`kie`).
-- **Manual:** upload `plugins/tasks/kie/1.0.0/plugin.js` (and optionally `icon.svg`).
+- **Manual:** upload `plugins/tasks/kie/1.0.1/plugin.js` (and optionally `icon.svg`).
 
 ## Bind a channel
 
@@ -147,7 +147,7 @@ Create a **Task Plugin** channel (type 61), set `task_plugin_key=kie`, paste you
 
 ## Calling the plugin
 
-1. **Native KIE routes** (drop-in replacement): `POST /kie/api/v1/jobs/createTask` and `GET /kie/api/v1/jobs/recordInfo?taskId=...`, with the exact KIE request bodies (`model`, `input`, optional `callBackUrl`).
+1. **Native KIE routes** (drop-in replacement): `POST /kie/api/v1/jobs/createTask` and `GET /kie/api/v1/jobs/recordInfo/:taskId`, with the exact KIE request bodies (`model`, `input`, optional `callBackUrl`).
 2. **OpenAI Responses** (`POST /v1/responses`, stream/sync/background): send `{model, input}`; standard `input_text`/`input_image` parts map to `prompt`/`image_urls`; extra vendor parameters go under `metadata.input`. Completed files render as proxied `<img>` / `<video>` / `<audio>` tags.
 3. **OpenAI Video** (`POST /v1/videos`): `{model, prompt, images?, metadata:{input:{...}}}`; JSON or multipart, URL references only (no file uploads).
 

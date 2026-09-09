@@ -170,12 +170,12 @@
         "wan/3-0-video-prime",
         "z-image"
       ],
-      "latest": "1.0.0",
+      "latest": "1.0.1",
       "versions": [
         {
-          "version": "1.0.0",
-          "path": "plugins/tasks/kie/1.0.0/plugin.js",
-          "sha256": "23161a05145a7af44b89bd682250c6b8e50723598077afb216a0f3e7dcfc0486",
+          "version": "1.0.1",
+          "path": "plugins/tasks/kie/1.0.1/plugin.js",
+          "sha256": "e01b181e890de74d29aebfef05747f0ec5dab15cbfe652726db20b19ebcc26e0",
           "minApiVersion": 1,
           "kind": "task",
           "baseUrl": "https://api.kie.ai",

@@ -39,7 +39,7 @@ export const meta = {
     en: "KIE.AI image, video and audio generation (Seedream, Kling, Wan, Seedance, Hailuo, Nano Banana, Ideogram, ElevenLabs and more)",
     zh: "KIE.AI 图像、视频与音频生成（即梦 Seedream、可灵 Kling、通义万相 Wan、Seedance、海螺、Nano Banana、Ideogram、ElevenLabs 等）",
   },
-  version: "1.0.0",
+  version: "1.0.1",
   author: { name: "community", url: "https://kie.ai" },
   website: "https://kie.ai",
   baseUrl: "https://api.kie.ai",
@@ -197,7 +197,7 @@ export const meta = {
   },
   routes: [
     { method: "POST", path: "/kie/api/v1/jobs/createTask", type: "submit", decode: "createJob", render: "jobCreated" },
-    { method: "GET", path: "/kie/api/v1/jobs/recordInfo", type: "query", taskIdParam: "taskId", render: "jobStatus" },
+    { method: "GET", path: "/kie/api/v1/jobs/recordInfo/:taskId", type: "query", taskIdParam: "taskId", render: "jobStatus" },
   ],
   protocols: [{ name: "openai_responses", supports: ["stream", "sync", "background"] }, "openai_video"],
 };
@@ -279,7 +279,7 @@ const UTILITY_MODELS = new Set([
 
 const JOBS_PATH = "/api/v1/jobs/createTask";
 const RECORD_PATH = "/api/v1/jobs/recordInfo";
-const USER_AGENT = "kie-newapi-plugin/1.0.0";
+const USER_AGENT = "kie-newapi-plugin/1.0.1";
 // KIE rejects tasks that produce more than a handful of files; cap the estimate.
 const MAX_ESTIMATED_RESULTS = 8;
 const URL_RE = /^https?:\/\/[^\s"']+$/i;

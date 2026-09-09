@@ -13,10 +13,11 @@ import pathlib
 import re
 import sys
 
+VERSION = "1.0.1"
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 MODELS_JSON = ROOT / "build" / "models.json"
 TEMPLATE = ROOT / "build" / "plugin.template.js"
-OUT = ROOT / "plugins" / "tasks" / "kie" / "1.0.0" / "plugin.js"
+OUT = ROOT / "plugins" / "tasks" / "kie" / VERSION / "plugin.js"
 
 MODEL_RE = re.compile(r"^[a-z0-9][a-z0-9._/-]*$")
 
