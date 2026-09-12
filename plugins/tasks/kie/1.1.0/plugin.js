@@ -39,11 +39,85 @@ export const meta = {
     en: "KIE.AI image, video and audio generation (Seedream, Kling, Wan, Seedance, Hailuo, Nano Banana, Ideogram, ElevenLabs and more)",
     zh: "KIE.AI 图像、视频与音频生成（即梦 Seedream、可灵 Kling、通义万相 Wan、Seedance、海螺、Nano Banana、Ideogram、ElevenLabs 等）",
   },
-  version: "__VERSION__",
+  version: "1.1.0",
   author: { name: "community", url: "https://kie.ai" },
   website: "https://kie.ai",
   baseUrl: "https://api.kie.ai",
-  models: __MODEL_LIST__,
+  models: [
+    "4o-image-api",
+    "bytedance/seedance-v1",
+    "elevenlabs-tts",
+    "elevenlabs/text-to-dialogue-v3",
+    "features/v3-api",
+    "flux-2",
+    "flux-kontext-api",
+    "gemini-2.5-pro-preview-tts",
+    "gemini-3.1-flash-tts",
+    "gemini-omni",
+    "gemini-omni-1-1-flash",
+    "google/imagen4",
+    "gpt-image-1.5",
+    "gpt-image-2",
+    "gpt-image-2-5",
+    "grok-imagine",
+    "grok-imagine-image-2",
+    "grok-imagine-video-1.5",
+    "hailuo-2-3",
+    "hailuo-api",
+    "happyhorse-1-0",
+    "happyhorse-1-1",
+    "ideogram/character",
+    "ideogram/v3",
+    "infinitalk",
+    "kling-2-5",
+    "kling-2-6",
+    "kling-2.6-motion-control",
+    "kling-3-0",
+    "kling-3-0-turbo",
+    "kling-3-motion-control",
+    "kling-ai-avatar",
+    "kling-o3",
+    "kling/v2-1",
+    "minimax-h3",
+    "nano-banana",
+    "nano-banana-2",
+    "nano-banana-2-lite",
+    "nano-banana-pro",
+    "omnihuman-1-5",
+    "pixverse-v6",
+    "qwen-image",
+    "qwen-image-2",
+    "qwen-image-3",
+    "qwen/image-edit",
+    "recraft-crisp-upscale",
+    "recraft-remove-background",
+    "runway-api",
+    "seedance-1-0-pro-fast",
+    "seedance-1-5-pro",
+    "seedance-2-0",
+    "seedance-2-0-mini",
+    "seedance-2-5",
+    "seedream",
+    "seedream-4-5",
+    "seedream-5-0-pro",
+    "seedream-api",
+    "seedream5-0-lite",
+    "suno-api",
+    "topaz-image-upscale",
+    "topaz-video-upscaler",
+    "veo-3-1",
+    "volcengine-video-to-video-lip-sync",
+    "wan-2-5",
+    "wan-2-6",
+    "wan-2-7-image",
+    "wan-2-7-video",
+    "wan-animate",
+    "wan-speech-to-video-turbo",
+    "wan/v2-2",
+    "wan3.0-video",
+    "wan3.0-video-prime",
+    "z-image",
+  ],
   fetchMode: "per_task",
   auth: "api_key",
   usageSchema: {
@@ -119,11 +193,7 @@ export const meta = {
     { method: "POST", path: "/kie/api/v1/jobs/createTask", type: "submit", decode: "createJob", render: "jobCreated" },
     { method: "GET", path: "/kie/api/v1/jobs/recordInfo/:taskId", type: "query", taskIdParam: "taskId", render: "jobStatus" },
   ],
-  protocols: [
-    { name: "openai_responses", supports: ["stream", "sync", "background"] },
-    "openai_video",
-__OPTIONAL_IMAGE_PROTOCOL__
-  ],
+  protocols: [{ name: "openai_responses", supports: ["stream", "sync", "background"] }, "openai_video"],
 };
 
 // --- model catalog -----------------------------------------------------------
@@ -131,12 +201,123 @@ __OPTIONAL_IMAGE_PROTOCOL__
 // sets; every other declared model is treated as video, which is also the
 // fallback media class for extension-less temporary URLs.
 
-__MODEL_BLOCK__
+const PRODUCT_UPSTREAM_MODELS = {
+    "4o-image-api": "4o-image-api",
+    "bytedance/seedance-v1": "bytedance/v1-pro-text-to-video",
+    "elevenlabs-tts": "elevenlabs/text-to-speech-turbo-2-5",
+    "elevenlabs/text-to-dialogue-v3": "elevenlabs/text-to-dialogue-v3",
+    "features/v3-api": "v3-api",
+    "flux-2": "flux-2/flex-text-to-image",
+    "flux-kontext-api": "flux1-kontext",
+    "gemini-2.5-pro-preview-tts": "google/gemini-2-5-pro-tts",
+    "gemini-3.1-flash-tts": "google/gemini-3-1-flash-tts",
+    "gemini-omni": "gemini-omni-video",
+    "gemini-omni-1-1-flash": "google/gemini-omni-flash-1-1",
+    "google/imagen4": "google/imagen4",
+    "gpt-image-1.5": "gpt-image/1.5-text-to-image",
+    "gpt-image-2": "gpt-image-2-text-to-image",
+    "gpt-image-2-5": "gpt-image-2-5-sunburst-text-to-image",
+    "grok-imagine": "grok-imagine/text-to-video",
+    "grok-imagine-image-2": "grok-imagine-image-2-0/text-to-image",
+    "grok-imagine-video-1.5": "grok-imagine-video-1-5-preview",
+    "hailuo-2-3": "hailuo/2-3-image-to-video-standard",
+    "hailuo-api": "hailuo/02-text-to-video-standard",
+    "happyhorse-1-0": "happyhorse/text-to-video",
+    "happyhorse-1-1": "happyhorse-1-1/text-to-video",
+    "ideogram/character": "ideogram/character",
+    "ideogram/v3": "ideogram/v3-text-to-image",
+    "infinitalk": "infinitalk/from-audio",
+    "kling-2-5": "kling/v2-5-turbo-text-to-video-pro",
+    "kling-2-6": "kling-2.6/text-to-video",
+    "kling-2.6-motion-control": "kling-2.6/motion-control",
+    "kling-3-0": "kling-3.0/video",
+    "kling-3-0-turbo": "kling/v3-turbo-text-to-video",
+    "kling-3-motion-control": "kling-3.0/motion-control",
+    "kling-ai-avatar": "kling/v1-avatar-standard",
+    "kling-o3": "kling-3.0-omni/text-to-video",
+    "kling/v2-1": "kling/v2-1-standard",
+    "minimax-h3": "minimax-h3/text-to-video",
+    "nano-banana": "google/nano-banana",
+    "nano-banana-2": "nano-banana-2",
+    "nano-banana-2-lite": "nano-banana-2-lite",
+    "nano-banana-pro": "nano-banana-pro",
+    "omnihuman-1-5": "omnihuman-1-5",
+    "pixverse-v6": "pixverse-v6/text-to-video",
+    "qwen-image": "qwen/text-to-image",
+    "qwen-image-2": "qwen2/text-to-image",
+    "qwen-image-3": "qwen3/text-to-image",
+    "qwen/image-edit": "qwen/image-edit",
+    "recraft-crisp-upscale": "recraft/crisp-upscale",
+    "recraft-remove-background": "recraft/remove-background",
+    "runway-api": "runway",
+    "seedance-1-0-pro-fast": "bytedance/v1-pro-fast-image-to-video",
+    "seedance-1-5-pro": "bytedance/seedance-1.5-pro",
+    "seedance-2-0": "bytedance/seedance-2",
+    "seedance-2-0-mini": "bytedance/seedance-2-mini",
+    "seedance-2-5": "bytedance/seedance-2-5",
+    "seedream": "bytedance/seedream",
+    "seedream-4-5": "seedream/4.5-text-to-image",
+    "seedream-5-0-pro": "seedream/5-pro-text-to-image",
+    "seedream-api": "bytedance/seedream-v4-text-to-image",
+    "seedream5-0-lite": "seedream/5-lite-text-to-image",
+    "suno-api": "ai-music-api/generate",
+    "topaz-image-upscale": "topaz/image-upscale",
+    "topaz-video-upscaler": "topaz/video-upscale",
+    "veo-3-1": "veo-3-1",
+    "volcengine-video-to-video-lip-sync": "volcengine/video-to-video-lip-sync",
+    "wan-2-5": "wan/2-5-text-to-video",
+    "wan-2-6": "wan/2-6-text-to-video",
+    "wan-2-7-image": "wan/2-7-image",
+    "wan-2-7-video": "wan/2-7-text-to-video",
+    "wan-animate": "wan/2-2-animate-move",
+    "wan-speech-to-video-turbo": "wan/2-2-a14b-speech-to-video-turbo",
+    "wan/v2-2": "wan/2-2-a14b-text-to-video-turbo",
+    "wan3.0-video": "wan/3-0-video",
+    "wan3.0-video-prime": "wan/3-0-video-prime",
+    "z-image": "z-image",
+  };
+const IMAGE_MODELS = new Set([
+    "4o-image-api",
+    "bytedance/seedream",
+    "bytedance/seedream-v4-text-to-image",
+    "flux-2/flex-text-to-image",
+    "flux1-kontext",
+    "google/imagen4",
+    "google/nano-banana",
+    "gpt-image-2-5-sunburst-text-to-image",
+    "gpt-image-2-text-to-image",
+    "gpt-image/1.5-text-to-image",
+    "grok-imagine-image-2-0/text-to-image",
+    "ideogram/character",
+    "ideogram/v3-text-to-image",
+    "nano-banana-2",
+    "nano-banana-2-lite",
+    "nano-banana-pro",
+    "qwen/image-edit",
+    "qwen/text-to-image",
+    "qwen2/text-to-image",
+    "qwen3/text-to-image",
+    "recraft/crisp-upscale",
+    "recraft/remove-background",
+    "seedream/4.5-text-to-image",
+    "seedream/5-lite-text-to-image",
+    "seedream/5-pro-text-to-image",
+    "topaz/image-upscale",
+    "wan/2-7-image",
+    "z-image",
+  ]);
+const AUDIO_MODELS = new Set([
+    "ai-music-api/generate",
+    "elevenlabs/text-to-dialogue-v3",
+    "elevenlabs/text-to-speech-turbo-2-5",
+    "google/gemini-2-5-pro-tts",
+    "google/gemini-3-1-flash-tts",
+  ]);
+const UTILITY_MODELS = new Set([]);
 
 const JOBS_PATH = "/api/v1/jobs/createTask";
 const RECORD_PATH = "/api/v1/jobs/recordInfo";
-const USER_AGENT = "kie-newapi-plugin/__VERSION__";
-const DEFAULT_ELEVENLABS_VOICE = "N2lVS1w4EtoT3dr4eOWO";
+const USER_AGENT = "kie-newapi-plugin/1.1.0";
 // KIE rejects tasks that produce more than a handful of files; cap the estimate.
 const MAX_ESTIMATED_RESULTS = 8;
 const URL_RE = /^https?:\/\/[^\s"']+$/i;
@@ -161,7 +342,7 @@ function authHeaders(ctx, withJson) {
 }
 
 function categoryOf(model) {
-  if (IMAGE_MODELS.has(model) || IMAGE_PRODUCT_MODELS.has(model)) return "image";
+  if (IMAGE_MODELS.has(model)) return "image";
   if (AUDIO_MODELS.has(model)) return "audio";
   if (UTILITY_MODELS.has(model)) return "utility";
   return "video";
@@ -338,32 +519,23 @@ function videoUsage(model, input) {
 
 function usageFor(model, input) {
   if (categoryOf(model) === "video") return videoUsage(model, input);
-  if (categoryOf(model) === "audio") return audioUsage(model, input);
+  if (categoryOf(model) === "audio") return audioUsage(input);
   return { results: estimateResults(input) };
 }
 
 function audioText(input) {
   const value = firstPresent(input, ["text", "prompt", "script", "dialogue"]);
-  let text;
-  if (Array.isArray(value)) text = value.map(function (item) {
+  if (Array.isArray(value)) return value.map(function (item) {
     if (typeof item === "string") return item;
     if (isPlainObject(item)) return trimmed(item.text || item.content || item.message);
     return "";
   }).join("\n");
-  else text = trimmed(value);
-  // Gemini TTS carries spoken text in dialogue_turns rather than a top-level field.
-  if (Array.isArray(input.dialogue_turns)) {
-    const turns = input.dialogue_turns.map(function (item) {
-      return isPlainObject(item) ? trimmed(item.text) : "";
-    }).filter(Boolean).join("\n");
-    if (turns) text = text ? text + "\n" + turns : turns;
-  }
-  return text;
+  return trimmed(value);
 }
 
-function audioUsage(model, input) {
+function audioUsage(input) {
   const text = audioText(input);
-  const usage = { results: estimateResults(input), tier: normalizeTier(model, input) };
+  const usage = { results: estimateResults(input) };
   if (text) usage.audio_characters = Array.from(text).length;
   return usage;
 }
@@ -387,107 +559,6 @@ function normalizeCallback(value) {
   return url;
 }
 
-const GEMINI_TTS_MODELS = new Set([
-  "google/gemini-2-5-pro-tts",
-  "google/gemini-3-1-flash-tts",
-]);
-
-const ELEVENLABS_TTS_MODELS = new Set([
-  "elevenlabs/text-to-speech-turbo-2-5",
-  "elevenlabs/text-to-speech-multilingual-v2",
-]);
-
-const ELEVENLABS_DIALOGUE_MODELS = new Set([
-  "elevenlabs/text-to-dialogue-v3",
-]);
-
-// elevenlabs-tts defaults to turbo 2.5; an explicit "standard" tier selects
-// multilingual v2 (its sell price equals the standard tier expression).
-function routeAudioModel(model, input) {
-  if (model === "elevenlabs/text-to-speech-turbo-2-5" && normalizeTier(model, input) === "standard") {
-    return "elevenlabs/text-to-speech-multilingual-v2";
-  }
-  return model;
-}
-
-// Fill Gemini TTS speaker configuration from a plain prompt so the models work
-// through both host protocols without clients hand-building dialogue payloads.
-function normalizeAudioInput(model, input) {
-  if (ELEVENLABS_TTS_MODELS.has(model)) {
-    const out = Object.assign({}, input);
-    if (!trimmed(out.text)) {
-      const text = trimmed(firstPresent(out, ["prompt", "script"]));
-      if (text) out.text = text;
-    }
-    const voice = trimmed(firstPresent(out, ["voice", "voiceId", "voice_id"]));
-    if (voice) out.voice = voice;
-    else out.voice = DEFAULT_ELEVENLABS_VOICE;
-    delete out.voiceId;
-    delete out.voice_id;
-    return out;
-  }
-  if (ELEVENLABS_DIALOGUE_MODELS.has(model)) {
-    const out = Object.assign({}, input);
-    let dialogue = Array.isArray(out.dialogue) ? out.dialogue : [];
-    if (!dialogue.length) {
-      const text = trimmed(firstPresent(out, ["text", "prompt", "script"]));
-      if (text) dialogue = [text];
-    }
-    if (!dialogue.length) return input; // let upstream run its own validation
-    const defaultVoice = trimmed(firstPresent(out, ["voice", "voiceId", "voice_id"])) || DEFAULT_ELEVENLABS_VOICE;
-    out.dialogue = dialogue.map(function (item) {
-      if (typeof item === "string") return { text: item, voice: defaultVoice };
-      if (!isPlainObject(item)) return item;
-      const text = trimmed(item.text || item.content || item.message);
-      const voice = trimmed(firstPresent(item, ["voice", "voiceId", "voice_id"])) || defaultVoice;
-      const normalized = Object.assign({}, item, { text: text, voice: voice });
-      delete normalized.voiceId;
-      delete normalized.voice_id;
-      return normalized;
-    }).filter(function (item) {
-      return isPlainObject(item) && trimmed(item.text);
-    });
-    if (!out.dialogue.length) return input;
-    out.voice = defaultVoice;
-    delete out.voiceId;
-    delete out.voice_id;
-    return out;
-  }
-  if (!GEMINI_TTS_MODELS.has(model)) return input;
-  const turns = [];
-  if (Array.isArray(input.dialogue_turns)) {
-    input.dialogue_turns.forEach(function (item, index) {
-      if (!isPlainObject(item)) return;
-      const text = trimmed(item.text);
-      if (!text) return;
-      turns.push({ speaker_id: trimmed(item.speaker_id) || ("Speaker " + (index + 1)), text: text });
-    });
-  }
-  if (!turns.length) {
-    const text = trimmed(firstPresent(input, ["text", "prompt", "script"]));
-    if (text) turns.push({ speaker_id: "Speaker 1", text: text });
-  }
-  if (!turns.length) return input; // let upstream run its own validation
-  const out = Object.assign({}, input, { dialogue_turns: turns });
-  if (!Array.isArray(out.speakers) || !out.speakers.length) {
-    const used = {};
-    turns.forEach(function (turn) { used[turn.speaker_id] = 1; });
-    out.speakers = Object.keys(used).map(function (id) {
-      return { speaker_id: id, voice_name: "Zephyr", accent: "Neutral" };
-    });
-  } else {
-    out.speakers = out.speakers.map(function (speaker, index) {
-      if (!isPlainObject(speaker)) return speaker;
-      const normalized = Object.assign({}, speaker);
-      if (!trimmed(normalized.speaker_id)) normalized.speaker_id = "Speaker " + (index + 1);
-      if (!trimmed(normalized.voice_name)) normalized.voice_name = "Zephyr";
-      if (!trimmed(normalized.accent)) normalized.accent = "Neutral";
-      return normalized;
-    });
-  }
-  return out;
-}
-
 // Resolve the vendor model id. A channel mapping is authoritative; without one
 // the client already sends the public KIE model id.
 function resolveModel(ctx, fallback) {
@@ -503,10 +574,8 @@ function resolveModel(ctx, fallback) {
 // Produces the canonical {model, input, callBackUrl?} KIE createTask payload.
 function normalizeJob(ctx, value, modelFallback) {
   if (!isPlainObject(value)) throw new Error("request body must be a JSON object");
-  const resolvedModel = resolveModel(ctx, modelFallback !== undefined ? modelFallback : value.model);
-  const rawInput = normalizeInput(value.input);
-  const model = routeAudioModel(resolvedModel, rawInput);
-  const input = normalizeAudioInput(model, rawInput);
+  const model = resolveModel(ctx, modelFallback !== undefined ? modelFallback : value.model);
+  const input = normalizeInput(value.input);
   const job = { model: model, input: input };
   const callBackUrl = normalizeCallback(value.callBackUrl);
   if (callBackUrl) job.callBackUrl = callBackUrl;
@@ -576,8 +645,6 @@ function parseRecord(data) {
   });
   if (parsed.resultObject !== undefined && parsed.resultObject !== null) out.resultObject = parsed.resultObject;
   collectObjectUrls(parsed.resultObject, out.object, 0);
-  // Suno (and other audio products) return { data: [{ audio_url, image_url }] }.
-  if (parsed.data !== undefined && parsed.data !== null) collectObjectUrls(parsed.data, out.object, 0);
   return out;
 }
 
@@ -771,7 +838,7 @@ export function extractUsageOnComplete(task, taskResult, body) {
   const model = trimmed(data.model);
   // KIE records generally do not echo the original video duration/resolution.
   // Return null for video completions so the host keeps the submit reservation.
-  if (model && (categoryOf(model) === "video" || categoryOf(model) === "audio")) return null;
+  if (model && categoryOf(model) === "video") return null;
   const parsed = safeParseData(data);
   // An unparseable result cannot establish the real count: keep the submit
   // reservation. A parsed success with zero URLs (e.g. human-identification)
@@ -854,14 +921,6 @@ function buildProtocolInput(req) {
   return input;
 }
 
-function buildImagesProtocolInput(req) {
-  const input = buildProtocolInput(req);
-  ["n", "size"].forEach(function (key) {
-    if (req[key] !== undefined && input[key] === undefined) input[key] = req[key];
-  });
-  return input;
-}
-
 function escapeAttribute(value) {
   return trimmed(value).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -891,31 +950,6 @@ function resultText(ctx, task) {
     return "```json\n" + JSON.stringify(parsed.resultObject) + "\n```";
   }
   return "Generation completed, but no result URL was returned.";
-}
-
-function imageRenderItems(ctx, task) {
-  const keys = listArtifacts(task)
-    .filter(function (artifact) { return artifact.type === "image"; })
-    .map(function (artifact) { return artifact.key; });
-  const items = keys.map(function (key) {
-    const served = ctx && ctx.artifacts && ctx.artifacts[key];
-    return { url: trimmed(served && served.url), key: key };
-  }).filter(function (item) { return !!item.url; });
-  if (items.length) return items;
-
-  const data = taskRecordData(task) || {};
-  return artifactEntries(data, trimmed(data.model))
-    .filter(function (entry) { return entry.type === "image" && entry.role === "primary"; })
-    .map(function (entry) { return { url: entry.url, key: entry.key }; });
-}
-
-function imageRenderResponse(ctx, task) {
-  return {
-    created: task.updated_at || task.created_at || Math.floor(Date.now() / 1000),
-    data: imageRenderItems(ctx, task).map(function (item) {
-      return { url: item.url, b64_json: "", revised_prompt: "" };
-    }),
-  };
 }
 
 export const protocols = {
@@ -1014,11 +1048,10 @@ export const protocols = {
       if (task.status === "SUCCESS") {
         const entries = artifactEntries(data, trimmed(data.model));
         const videos = entries.filter(function (entry) { return entry.type === "video"; });
-        const audio = entries.filter(function (entry) { return entry.type === "audio"; });
-        // Video models list video files only (frames stay artifacts). Audio
-        // products (TTS, Suno) surface audio URLs, since the video object is
-        // the only result channel on this protocol.
-        const shown = videos.length ? videos : (audio.length ? audio : entries.filter(function (entry) { return entry.role === "primary"; }));
+        // Video models list video files only (frames stay artifacts). Models
+        // whose media is an image or audio surface those primary URLs instead,
+        // since the video object is the only result channel on this protocol.
+        const shown = videos.length ? videos : entries.filter(function (entry) { return entry.role === "primary"; });
         const urls = shown.map(function (entry) { return entry.url; });
         if (urls.length) {
           output.url = urls[0];
@@ -1028,25 +1061,6 @@ export const protocols = {
         output.error = { code: trimmed(data.failCode) || "generation_failed", message: task.fail_reason || trimmed(data.failMsg) || "task failed" };
       }
       return output;
-    },
-  },
-
-  openai_images: {
-    decodeRequest: function (ctx) {
-      if (!ctx.body || ctx.body.kind !== "json") throw new Error("JSON body required");
-      const req = ctx.body.value;
-      if (!isPlainObject(req)) throw new Error("request body must be an object");
-      if (!trimmed(ctx.model)) throw new Error("model is required");
-      if (!IMAGE_PRODUCT_MODELS.has(trimmed(ctx.model))) throw new Error("model is not bound to openai_images: " + trimmed(ctx.model));
-      const input = buildImagesProtocolInput(req);
-      const job = { model: trimmed(ctx.model), input: input };
-      const callBackUrl = protocolCallback(req);
-      if (callBackUrl) job.callBackUrl = callBackUrl;
-      return { kind: "submit", model: trimmed(ctx.model), requestBody: job };
-    },
-
-    render: function (ctx, task) {
-      return imageRenderResponse(ctx || {}, task);
     },
   },
 };

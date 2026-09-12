@@ -6,9 +6,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const pluginPath = path.join(here, "..", "plugins", "tasks", "kie", "1.0.1", "plugin.js");
+const pluginPath = path.join(here, "..", "plugins", "tasks", "kie", "1.2.4", "plugin.js");
 const plugin = await import(pathToFileURL(pluginPath).href);
-const models = createRequire(import.meta.url)("./models.json");
+const catalog = createRequire(import.meta.url)("./product-groups.json");
 
 let passed = 0;
 function test(name, fn) {
@@ -21,21 +21,31 @@ const BASE = "https://api.kie.ai";
 const KEY = "test-key";
 
 // --- meta -------------------------------------------------------------------
-test("meta declares 141 generation models, no chat models", () => {
+test("meta declares 74 available generation product groups, no chat models", () => {
   assert.equal(plugin.meta.apiVersion, 1);
   assert.equal(plugin.meta.key, "kie");
-  assert.equal(plugin.meta.version, "1.0.1");
+  assert.equal(plugin.meta.version, "1.2.4");
   const queryRoute = plugin.meta.routes.find((r) => r.type === "query");
   assert.match(queryRoute.path, /:taskId$/);
   assert.equal(plugin.meta.fetchMode, "per_task");
   assert.equal(plugin.meta.baseUrl, BASE);
-  const generation = [...models.image, ...models.video, ...models.audio, ...models.utility];
+  const generation = catalog.products
+    .filter((product) => product.kind === "generation" && product.status === "available")
+    .map((product) => product.id);
+  const chatModels = catalog.products.filter((product) => product.kind === "chat").map((product) => product.id);
+  assert.equal(generation.length, 74);
   assert.equal(plugin.meta.models.length, generation.length);
   for (const id of generation) assert.ok(plugin.meta.models.includes(id), "missing " + id);
-  for (const id of models.chat) assert.ok(!plugin.meta.models.includes(id), "chat model leaked: " + id);
+  for (const id of chatModels) assert.ok(!plugin.meta.models.includes(id), "chat model leaked: " + id);
+  for (const product of catalog.products.filter((item) => item.kind === "generation" && item.status === "available")) {
+    const req = plugin.buildSubmitRequest(submitCtx(product.id, { model: product.id, input: {} }));
+    assert.equal(req.body.model, product.upstreamModel, `${product.id} should map to ${product.upstreamModel}`);
+  }
   assert.ok(plugin.meta.routes.length === 2);
   assert.ok(plugin.meta.protocols.some((p) => p.name === "openai_responses"));
   assert.ok(plugin.meta.protocols.includes("openai_video"));
+  const imageProtocol = plugin.meta.protocols.find((protocol) => protocol.name === "openai_images");
+  assert.equal(imageProtocol, undefined, "openai_images must stay undeclared until production core supports it");
   const usageKeys = Object.keys(plugin.meta.usageSchema);
   assert.ok(plugin.meta.usageExamples.length >= 1);
   for (const example of plugin.meta.usageExamples) {
@@ -54,9 +64,9 @@ function submitCtx(model, requestBody, extra = {}) {
 }
 
 test("native createJob decodes and buildSubmitRequest posts createTask", () => {
-  const intent = plugin.native.createJob(nativeBody({ model: "bytedance/seedream-v4-text-to-image", input: { prompt: "a cat", max_images: 2 } }));
+  const intent = plugin.native.createJob(nativeBody({ model: "seedream-api", input: { prompt: "a cat", max_images: 2 } }));
   assert.equal(intent.kind, "submit");
-  assert.equal(intent.model, "bytedance/seedream-v4-text-to-image");
+  assert.equal(intent.model, "seedream-api");
   const ctx = submitCtx(intent.model, intent.requestBody);
   const req = plugin.buildSubmitRequest(ctx);
   assert.equal(req.url, BASE + "/api/v1/jobs/createTask");
@@ -67,6 +77,14 @@ test("native createJob decodes and buildSubmitRequest posts createTask", () => {
 
   const parsed = plugin.parseSubmitResponse(ctx, { statusCode: 200, headers: {}, body: { code: 200, msg: "success", data: { taskId: "task_1" } } });
   assert.equal(parsed.taskId, "task_1");
+});
+
+test("public product group resolves to its internal default createTask id", () => {
+  const req = plugin.buildSubmitRequest(
+    submitCtx("gpt-image-2-5", { model: "gpt-image-2-5", input: { prompt: "a cat" } })
+  );
+  assert.equal(req.body.model, "gpt-image-2-5-sunburst-text-to-image");
+  assert.equal(req.action, "text_to_image");
 });
 
 test("submit forwards callBackUrl and detects image-to-video action", () => {
@@ -245,6 +263,7 @@ test("usage reserves image files, video facts, and speech characters", () => {
   assert.deepEqual(plugin.extractUsage(submitCtx("elevenlabs/text-to-speech-turbo-2-5", { model: "elevenlabs/text-to-speech-turbo-2-5", input: { text: "hello" } })), {
     results: 1,
     audio_characters: 5,
+    tier: "turbo",
   });
   const body = queryEnvelope("success", { resultJson: JSON.stringify({ resultUrls: ["https://a/1.png", "https://a/2.png"] }) });
   assert.deepEqual(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, body), { results: 2 });
@@ -253,6 +272,117 @@ test("usage reserves image files, video facts, and speech characters", () => {
   const none = queryEnvelope("success", { resultJson: JSON.stringify({ resultObject: { subject_status: 0 } }) });
   assert.deepEqual(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, none), { results: 0 });
   assert.equal(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, {}), null);
+});
+
+// --- audio models -------------------------------------------------------------
+test("gemini tts accepts a plain prompt and bills spoken characters", () => {
+  const req = plugin.buildSubmitRequest(
+    submitCtx("gemini-3.1-flash-tts", { model: "gemini-3.1-flash-tts", input: { prompt: "hello there" } })
+  );
+  assert.equal(req.body.model, "google/gemini-3-1-flash-tts");
+  assert.deepEqual(req.body.input.speakers, [
+    { speaker_id: "Speaker 1", voice_name: "Zephyr", accent: "Neutral" },
+  ]);
+  assert.deepEqual(req.body.input.dialogue_turns, [{ speaker_id: "Speaker 1", text: "hello there" }]);
+  const usage = plugin.extractUsage(
+    submitCtx("gemini-3.1-flash-tts", { model: "gemini-3.1-flash-tts", input: { dialogue_turns: [{ speaker_id: "Speaker 1", text: "hello there" }] } })
+  );
+  assert.equal(usage.audio_characters, 11);
+});
+
+test("gemini tts derives missing speakers from dialogue turns", () => {
+  const req = plugin.buildSubmitRequest(
+    submitCtx("gemini-2.5-pro-preview-tts", {
+      model: "gemini-2.5-pro-preview-tts",
+      input: { dialogue_turns: [{ text: "first" }, { speaker_id: "Speaker 2", text: "second" }] },
+    })
+  );
+  assert.equal(req.body.model, "google/gemini-2-5-pro-tts");
+  assert.deepEqual(req.body.input.speakers.map((s) => s.speaker_id), ["Speaker 1", "Speaker 2"]);
+  assert.deepEqual(req.body.input.speakers.map((s) => s.voice_name), ["Zephyr", "Zephyr"]);
+});
+
+test("elevenlabs standard tier routes to multilingual v2", () => {
+  const turbo = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs-tts", { model: "elevenlabs-tts", input: { text: "hi", voice: "Rachel" } })
+  );
+  assert.equal(turbo.body.model, "elevenlabs/text-to-speech-turbo-2-5");
+  const standard = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs-tts", { model: "elevenlabs-tts", input: { text: "hi", voice: "Rachel", tier: "standard" } })
+  );
+  assert.equal(standard.body.model, "elevenlabs/text-to-speech-multilingual-v2");
+  const direct = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs/text-to-speech-multilingual-v2", { model: "elevenlabs/text-to-speech-multilingual-v2", input: { text: "hi" } })
+  );
+  assert.equal(direct.body.model, "elevenlabs/text-to-speech-multilingual-v2");
+  const prompted = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs-tts", { model: "elevenlabs-tts", input: { prompt: "say this" } })
+  );
+  assert.equal(prompted.body.model, "elevenlabs/text-to-speech-turbo-2-5");
+  assert.equal(prompted.body.input.text, "say this");
+  assert.equal(prompted.body.input.voice, "N2lVS1w4EtoT3dr4eOWO");
+  const usage = plugin.extractUsage(
+    submitCtx("elevenlabs-tts", { model: "elevenlabs-tts", input: prompted.body.input })
+  );
+  assert.equal(usage.tier, "turbo");
+});
+
+test("elevenlabs tts accepts a prompt and canonicalizes common voice fields", () => {
+  const req = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs/text-to-speech-multilingual-v2", {
+      model: "elevenlabs/text-to-speech-multilingual-v2",
+      input: { prompt: "say this", voice_id: "voice-123" },
+    })
+  );
+  assert.equal(req.body.input.text, "say this");
+  assert.equal(req.body.input.voice, "voice-123");
+  assert.equal(req.body.input.voice_id, undefined);
+});
+
+test("elevenlabs dialogue accepts plain text and fills each speaker", () => {
+  const prompted = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs/text-to-dialogue-v3", {
+      model: "elevenlabs/text-to-dialogue-v3",
+      input: { prompt: "a friendly duet", voice: "Adam" },
+    })
+  );
+  assert.deepEqual(prompted.body.input.dialogue, [{ text: "a friendly duet", voice: "Adam" }]);
+
+  const mixed = plugin.buildSubmitRequest(
+    submitCtx("elevenlabs/text-to-dialogue-v3", {
+      model: "elevenlabs/text-to-dialogue-v3",
+      input: {
+        dialogue: [
+          { content: "first line", voiceId: "voice-a" },
+          { message: "second line" },
+        ],
+      },
+    })
+  );
+  assert.deepEqual(mixed.body.input.dialogue, [
+    { content: "first line", text: "first line", voice: "voice-a" },
+    { message: "second line", text: "second line", voice: "N2lVS1w4EtoT3dr4eOWO" },
+  ]);
+  const usage = plugin.extractUsage(
+    submitCtx("elevenlabs/text-to-dialogue-v3", {
+      model: "elevenlabs/text-to-dialogue-v3",
+      input: mixed.body.input,
+    })
+  );
+  assert.equal(usage.audio_characters, 22);
+});
+
+test("suno data-array results surface audio and image artifacts; completion keeps reservation", () => {
+  const song = successTask("ai-music-api/generate", {
+    data: [{ audio_url: "https://files/song.mp3", image_url: "https://files/cover.jpeg" }],
+  });
+  const types = plugin.listArtifacts(song).map((a) => a.type).sort();
+  assert.deepEqual(types, ["audio", "image"]);
+  const body = queryEnvelope("success", {
+    model: "ai-music-api/generate",
+    resultJson: JSON.stringify({ data: [{ audio_url: "https://files/song.mp3", image_url: "https://files/cover.jpeg" }] }),
+  });
+  assert.equal(plugin.extractUsageOnComplete({ status: "SUCCESS" }, { status: "SUCCESS" }, body), null);
 });
 
 // --- openai_responses protocol ----------------------------------------------
@@ -313,6 +443,51 @@ test("utility resultObject renders as JSON text", () => {
   assert.match(final.output[0].content[0].text, /subject_status/);
 });
 
+// --- openai_images protocol --------------------------------------------------
+test("experimental openai_images code decodes a standard generation request and maps the public image product", () => {
+  const decoded = plugin.protocols.openai_images.decodeRequest(
+    protocolCtx("gpt-image-2-5", {
+      prompt: "a tiny red circle",
+      n: 1,
+      size: "1024x1024",
+      response_format: "url",
+      metadata: { input: { quality: "high" } },
+    }, "openai_images")
+  );
+  assert.equal(decoded.kind, "submit");
+  assert.equal(decoded.model, "gpt-image-2-5");
+  assert.deepEqual(decoded.requestBody.input, {
+    quality: "high",
+    prompt: "a tiny red circle",
+    n: 1,
+    size: "1024x1024",
+  });
+  const upstream = plugin.buildSubmitRequest(submitCtx(decoded.model, decoded.requestBody));
+  assert.equal(upstream.body.model, "gpt-image-2-5-sunburst-text-to-image");
+  assert.equal(upstream.body.input.response_format, undefined);
+  assert.throws(
+    () => plugin.protocols.openai_images.decodeRequest(protocolCtx("kling-3-0", { prompt: "x" }, "openai_images")),
+    /not bound to openai_images/
+  );
+});
+
+test("openai_images render returns proxied image URLs in OpenAI response shape", () => {
+  const task = successTask("gpt-image-2-5", { resultUrls: ["https://temp.file/without-extension"] });
+  assert.equal(plugin.listArtifacts(task)[0].type, "image");
+  const rendered = plugin.protocols.openai_images.render(
+    { artifacts: { "image-0": { url: "https://gateway/tasks/t/image-0/content" } } },
+    Object.assign(task, { created_at: 1710000000, updated_at: 1710000060 })
+  );
+  assert.equal(rendered.created, 1710000060);
+  assert.deepEqual(rendered.data, [{ url: "https://gateway/tasks/t/image-0/content", b64_json: "", revised_prompt: "" }]);
+
+  const fallback = plugin.protocols.openai_images.render(
+    { artifacts: {} },
+    successTask("gpt-image-2-5", { resultUrls: ["https://kie.result/a.png"] })
+  );
+  assert.deepEqual(fallback.data, [{ url: "https://kie.result/a.png", b64_json: "", revised_prompt: "" }]);
+});
+
 // --- openai_video protocol ---------------------------------------------------
 test("openai_video decode accepts JSON and rejects file uploads", () => {
   const decoded = plugin.protocols.openai_video.decodeRequest(
@@ -341,6 +516,12 @@ test("openai_video render maps statuses and surfaces urls", () => {
   assert.equal(out.urls.length, 2);
   const queued = plugin.protocols.openai_video.render(null, { task_id: "t", status: "QUEUED", data: queryEnvelope("waiting") });
   assert.equal(queued.status, "queued");
+  const song = successTask("ai-music-api/generate", {
+    data: [{ audio_url: "https://files/song.mp3", image_url: "https://files/cover.jpeg" }],
+  });
+  const rendered = plugin.protocols.openai_video.render(null, song);
+  assert.equal(rendered.url, "https://files/song.mp3");
+  assert.deepEqual(rendered.urls, ["https://files/song.mp3"]);
 });
 
 test("frame artifacts derive MIME from URL extension", () => {

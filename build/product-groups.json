@@ -1,0 +1,1467 @@
+{
+  "snapshotDate": "2026-09-10",
+  "source": "https://api.kie.ai/api/v1/playground/pagePlaygroundGroup",
+  "productGroups": 104,
+  "counts": {
+    "all": 104,
+    "available": 100,
+    "comingSoon": 4,
+    "chat": 29,
+    "chatAvailable": 27,
+    "generation": 75,
+    "generationAvailable": 73,
+    "byCategory": {
+      "image": 28,
+      "video": 40,
+      "audio": 5,
+      "chat": 27
+    }
+  },
+  "note": "User-facing catalog counts product groups only. upstreamModel is an internal default concrete createTask ID; variants are not separate models.",
+  "products": [
+    {
+      "id": "gpt-image-2-5",
+      "name": "GPT Image 2.5",
+      "provider": "OpenAI",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image",
+        "Image Editing"
+      ],
+      "category": "image",
+      "upstreamModel": "gpt-image-2-5-sunburst-text-to-image"
+    },
+    {
+      "id": "gpt-6-astra",
+      "name": "GPT-6 Astra",
+      "provider": "OpenAI",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gpt-6-astra"
+    },
+    {
+      "id": "gemini-3-8-flash",
+      "name": "Gemini 3.8 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-8-flash-openai"
+    },
+    {
+      "id": "claude-fable-5-1",
+      "name": "Claude Fable 5.1 (Coming Soon)",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "coming_soon",
+      "variantCount": 0,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-fable-5-1"
+    },
+    {
+      "id": "gemini-omni-1-1-flash",
+      "name": "Gemini Omni 1.1 Flash",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video Editing",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "google/gemini-omni-flash-1-1"
+    },
+    {
+      "id": "wan3.0-video",
+      "name": "Wan 3.0 Video",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video",
+        "Video Editing"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/3-0-video"
+    },
+    {
+      "id": "wan3.0-video-prime",
+      "name": "Wan 3.0 Video Prime",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/3-0-video-prime"
+    },
+    {
+      "id": "kling-o3",
+      "name": "Kling O3",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video Editing"
+      ],
+      "category": "video",
+      "upstreamModel": "kling-3.0-omni/text-to-video"
+    },
+    {
+      "id": "gemini-3-7-flash",
+      "name": "Gemini 3.7 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-7-flash-openai"
+    },
+    {
+      "id": "grok-4-6",
+      "name": "Grok 4.6",
+      "provider": "Grok",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "grok-4-6"
+    },
+    {
+      "id": "wan-animate-2",
+      "name": "Wan Animate 2 (Coming Soon)",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "coming_soon",
+      "variantCount": 0,
+      "taskTypes": [
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": ""
+    },
+    {
+      "id": "grok-imagine-image-2",
+      "name": "Grok Imagine Image 2.0",
+      "provider": "Grok",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image",
+        "Image Editing"
+      ],
+      "category": "image",
+      "upstreamModel": "grok-imagine-image-2-0/text-to-image"
+    },
+    {
+      "id": "minimax-h3",
+      "name": "MiniMax H3 (Hailuo-03)",
+      "provider": "Hailuo",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video",
+        "Video Editing"
+      ],
+      "category": "video",
+      "upstreamModel": "minimax-h3/text-to-video"
+    },
+    {
+      "id": "claude-opus-5",
+      "name": "Claude Opus 5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-opus-5"
+    },
+    {
+      "id": "flux-3",
+      "name": "Flux 3 (Coming Soon)",
+      "provider": "Black Forest Labs",
+      "kind": "generation",
+      "status": "coming_soon",
+      "variantCount": 0,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "video",
+      "upstreamModel": ""
+    },
+    {
+      "id": "gemini-3-6-flash",
+      "name": "Gemini 3.6 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-6-flash-openai"
+    },
+    {
+      "id": "qwen-image-3",
+      "name": "Qwen Image 3.0",
+      "provider": "Qwen",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "qwen3/text-to-image"
+    },
+    {
+      "id": "pixverse-v6",
+      "name": "PixVerse V6",
+      "provider": "Other",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 5,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "pixverse-v6/text-to-video"
+    },
+    {
+      "id": "kimi-k3",
+      "name": "Kimi K3(Coming Soon)",
+      "provider": "Moonshot AI",
+      "kind": "chat",
+      "status": "coming_soon",
+      "variantCount": 0,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "kimi-k3"
+    },
+    {
+      "id": "gemini-3.1-flash-tts",
+      "name": "Gemini 3.1 Flash TTS",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Speech"
+      ],
+      "category": "audio",
+      "upstreamModel": "google/gemini-3-1-flash-tts"
+    },
+    {
+      "id": "gemini-2.5-pro-preview-tts",
+      "name": "Gemini 2.5 Pro Preview TTS",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Speech"
+      ],
+      "category": "audio",
+      "upstreamModel": "google/gemini-2-5-pro-tts"
+    },
+    {
+      "id": "gpt-5-6",
+      "name": "GPT-5.6",
+      "provider": "OpenAI",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gpt-5-6-luna"
+    },
+    {
+      "id": "grok-4-5",
+      "name": "Grok 4.5",
+      "provider": "Grok",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "grok-4-5"
+    },
+    {
+      "id": "grok-4-3",
+      "name": "Grok 4.3",
+      "provider": "Grok",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "grok-4-3"
+    },
+    {
+      "id": "seedream-5-0-pro",
+      "name": "Seedream 5.0 Pro",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image",
+        "Image Editing"
+      ],
+      "category": "image",
+      "upstreamModel": "seedream/5-pro-text-to-image"
+    },
+    {
+      "id": "nano-banana-2-lite",
+      "name": "Nano Banana 2 Lite",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image",
+        "Image Editing"
+      ],
+      "category": "image",
+      "upstreamModel": "nano-banana-2-lite"
+    },
+    {
+      "id": "claude-sonnet-5",
+      "name": "Claude Sonnet 5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-sonnet-5"
+    },
+    {
+      "id": "seedance-2-5",
+      "name": "Seedance 2.5",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/seedance-2-5"
+    },
+    {
+      "id": "seedance-2-0-mini",
+      "name": "Seedance 2.0 Mini",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/seedance-2-mini"
+    },
+    {
+      "id": "happyhorse-1-1",
+      "name": "HappyHorse-1.1",
+      "provider": "Alibaba",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "happyhorse-1-1/text-to-video"
+    },
+    {
+      "id": "kling-3-0-turbo",
+      "name": "Kling 3.0 Turbo",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling/v3-turbo-text-to-video"
+    },
+    {
+      "id": "volcengine-video-to-video-lip-sync",
+      "name": "Volcengine Video-to-Video Lip Sync",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Lip Sync"
+      ],
+      "category": "video",
+      "upstreamModel": "volcengine/video-to-video-lip-sync"
+    },
+    {
+      "id": "omnihuman-1-5",
+      "name": "OmniHuman 1.5",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Lip Sync"
+      ],
+      "category": "video",
+      "upstreamModel": "omnihuman-1-5"
+    },
+    {
+      "id": "claude-fable-5",
+      "name": "Claude Fable 5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-fable-5"
+    },
+    {
+      "id": "grok-imagine-video-1.5",
+      "name": "Grok Imagine Video 1.5",
+      "provider": "Grok",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "grok-imagine-video-1-5-preview"
+    },
+    {
+      "id": "claude-opus-4-8",
+      "name": "Claude Opus 4.8",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-opus-4-8"
+    },
+    {
+      "id": "gemini-3-5-flash",
+      "name": "Gemini 3.5 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-5-flash-openai"
+    },
+    {
+      "id": "gemini-omni",
+      "name": "Gemini Omni",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "gemini-omni-video"
+    },
+    {
+      "id": "claude-opus-4-7",
+      "name": "Claude Opus 4.7",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-opus-4-7"
+    },
+    {
+      "id": "gpt-5-5",
+      "name": "GPT-5.5",
+      "provider": "OpenAI",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gpt-5-5"
+    },
+    {
+      "id": "gpt-image-2",
+      "name": "GPT Image 2",
+      "provider": "OpenAI",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "gpt-image-2-text-to-image"
+    },
+    {
+      "id": "happyhorse-1-0",
+      "name": "HappyHorse-1.0",
+      "provider": "Alibaba",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "happyhorse/text-to-video"
+    },
+    {
+      "id": "wan-2-7-video",
+      "name": "Wan 2.7 Video",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video",
+        "Video Editing"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-7-text-to-video"
+    },
+    {
+      "id": "seedance-2-0",
+      "name": "Seedance 2.0",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Lip Sync",
+        "Video Editing",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/seedance-2"
+    },
+    {
+      "id": "wan-2-7-image",
+      "name": "Wan2.7 Image",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "wan/2-7-image"
+    },
+    {
+      "id": "qwen-image-2",
+      "name": "Qwen Image 2.0",
+      "provider": "Qwen",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "qwen2/text-to-image"
+    },
+    {
+      "id": "claude-sonnet-4-6",
+      "name": "Claude Sonnet 4.6",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-sonnet-4-6"
+    },
+    {
+      "id": "claude-opus-4-6",
+      "name": "Claude Opus 4.6",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-opus-4-6"
+    },
+    {
+      "id": "claude-haiku-4-5",
+      "name": "Claude Haiku 4.5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-haiku-4-5"
+    },
+    {
+      "id": "kling-3-motion-control",
+      "name": "Kling 3.0 Motion Control",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling-3.0/motion-control"
+    },
+    {
+      "id": "codex",
+      "name": "OpenAI Codex",
+      "provider": "OpenAI",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 5,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gpt-5.4-codex"
+    },
+    {
+      "id": "gemini-3-1-pro",
+      "name": "Gemini 3.1 Pro",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-1-pro"
+    },
+    {
+      "id": "nano-banana-2",
+      "name": "Nano Banana 2",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "nano-banana-2"
+    },
+    {
+      "id": "gpt-5-2",
+      "name": "GPT-5.2",
+      "provider": "OpenAI",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gpt-5-2"
+    },
+    {
+      "id": "seedream5-0-lite",
+      "name": "Seedream 5.0 Lite",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "seedream/5-lite-text-to-image"
+    },
+    {
+      "id": "kling-3-0",
+      "name": "Kling 3.0",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Lip Sync"
+      ],
+      "category": "video",
+      "upstreamModel": "kling-3.0/video"
+    },
+    {
+      "id": "elevenlabs/text-to-dialogue-v3",
+      "name": "ElevenLabs V3",
+      "provider": "Elevenlabs",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Speech"
+      ],
+      "category": "audio",
+      "upstreamModel": "elevenlabs/text-to-dialogue-v3"
+    },
+    {
+      "id": "elevenlabs/text-to-speech-multilingual-v2",
+      "name": "Elevenlabs Text to Speech, multilingual v2",
+      "provider": "Elevenlabs",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Speech"
+      ],
+      "category": "audio",
+      "upstreamModel": "elevenlabs/text-to-speech-multilingual-v2"
+    },
+    {
+      "id": "claude-sonnet-4-5",
+      "name": "Claude Sonnet 4.5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-sonnet-4-5"
+    },
+    {
+      "id": "claude-opus-4-5",
+      "name": "Claude Opus 4.5",
+      "provider": "Anthropic",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "claude-opus-4-5"
+    },
+    {
+      "id": "gemini-2.5-flash",
+      "name": "Gemini 2.5 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-2.5-flash"
+    },
+    {
+      "id": "gemini-2.5-pro",
+      "name": "Gemini 2.5 Pro",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-2.5-pro"
+    },
+    {
+      "id": "gemini-3-flash",
+      "name": "Gemini 3 Flash",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-flash"
+    },
+    {
+      "id": "kling-2.6-motion-control",
+      "name": "Kling 2.6 Motion Control",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling-2.6/motion-control"
+    },
+    {
+      "id": "seedance-1-5-pro",
+      "name": "Seedance 1.5 Pro",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/seedance-1.5-pro"
+    },
+    {
+      "id": "wan-2-6",
+      "name": "Wan 2.6",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-6-text-to-video"
+    },
+    {
+      "id": "gpt-image-1.5",
+      "name": "gpt-image-1.5",
+      "provider": "OpenAI",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "gpt-image/1.5-text-to-image"
+    },
+    {
+      "id": "seedream-4-5",
+      "name": "Seedream 4.5",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image",
+        "Image Editing"
+      ],
+      "category": "image",
+      "upstreamModel": "seedream/4.5-text-to-image"
+    },
+    {
+      "id": "kling-2-6",
+      "name": "Kling 2.6",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling-2.6/text-to-video"
+    },
+    {
+      "id": "z-image",
+      "name": "Z-Image",
+      "provider": "Qwen",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "z-image"
+    },
+    {
+      "id": "flux-2",
+      "name": "FLUX.2",
+      "provider": "Black Forest Labs",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "flux-2/flex-text-to-image"
+    },
+    {
+      "id": "gemini-3-pro",
+      "name": "Gemini 3 Pro",
+      "provider": "Google",
+      "kind": "chat",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Chat"
+      ],
+      "category": "chat",
+      "upstreamModel": "gemini-3-pro"
+    },
+    {
+      "id": "nano-banana-pro",
+      "name": "Nano Banana Pro",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "nano-banana-pro"
+    },
+    {
+      "id": "seedance-1-0-pro-fast",
+      "name": "Seedance 1.0 Pro Fast",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/v1-pro-fast-image-to-video"
+    },
+    {
+      "id": "grok-imagine",
+      "name": "Grok Imagine",
+      "provider": "Grok",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 6,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video",
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "video",
+      "upstreamModel": "grok-imagine/text-to-video"
+    },
+    {
+      "id": "hailuo-2-3",
+      "name": "Hailuo 2.3",
+      "provider": "Hailuo",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "hailuo/2-3-image-to-video-standard"
+    },
+    {
+      "id": "veo-3-1",
+      "name": "Veo 3.1",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "veo-3-1"
+    },
+    {
+      "id": "features/v3-api",
+      "name": "Veo 3",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "v3-api"
+    },
+    {
+      "id": "4o-image-api",
+      "name": "4o Image",
+      "provider": "OpenAI",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "4o-image-api"
+    },
+    {
+      "id": "flux-kontext-api",
+      "name": "Flux Kontext",
+      "provider": "Black Forest Labs",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "flux1-kontext"
+    },
+    {
+      "id": "topaz-image-upscale",
+      "name": "Topaz Image Upscale",
+      "provider": "Topaz",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "topaz/image-upscale"
+    },
+    {
+      "id": "kling-2-5",
+      "name": "Kling 2.5 Turbo",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling/v2-5-turbo-text-to-video-pro"
+    },
+    {
+      "id": "wan-2-5",
+      "name": "Wan 2.5",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-5-text-to-video"
+    },
+    {
+      "id": "wan-animate",
+      "name": "Wan 2.2 Animate",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-2-animate-move"
+    },
+    {
+      "id": "hailuo-api",
+      "name": "Hailuo 02",
+      "provider": "Hailuo",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "hailuo/02-text-to-video-standard"
+    },
+    {
+      "id": "topaz-video-upscaler",
+      "name": "Topaz Video Upscaler",
+      "provider": "Topaz",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Video to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "topaz/video-upscale"
+    },
+    {
+      "id": "kling-ai-avatar",
+      "name": "Kling AI Avatar 2.0",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Lip Sync"
+      ],
+      "category": "video",
+      "upstreamModel": "kling/v1-avatar-standard"
+    },
+    {
+      "id": "seedream-api",
+      "name": "Seedream 4.0",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "bytedance/seedream-v4-text-to-image"
+    },
+    {
+      "id": "infinitalk",
+      "name": "Infinitalk API-AI lip-sync generator",
+      "provider": "Other",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Speech to Video",
+        "Lip Sync"
+      ],
+      "category": "video",
+      "upstreamModel": "infinitalk/from-audio"
+    },
+    {
+      "id": "recraft-remove-background",
+      "name": "Recraft Remove Background",
+      "provider": "Recraft",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "recraft/remove-background"
+    },
+    {
+      "id": "recraft-crisp-upscale",
+      "name": "Recraft Crisp Upscale",
+      "provider": "Recraft",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "recraft/crisp-upscale"
+    },
+    {
+      "id": "elevenlabs-tts",
+      "name": "Elevenlabs Text to Speech",
+      "provider": "Elevenlabs",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Speech"
+      ],
+      "category": "audio",
+      "upstreamModel": "elevenlabs/text-to-speech-turbo-2-5"
+    },
+    {
+      "id": "wan-speech-to-video-turbo",
+      "name": "Wan 2.2 A14B Speech to Video Turbo",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Speech to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-2-a14b-speech-to-video-turbo"
+    },
+    {
+      "id": "seedream",
+      "name": "Seedream",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Text to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "bytedance/seedream"
+    },
+    {
+      "id": "qwen-image",
+      "name": "Qwen Image",
+      "provider": "Qwen",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "qwen/text-to-image"
+    },
+    {
+      "id": "nano-banana",
+      "name": "NanoBanana-Gemini 2.5 Flash Image Preview",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "google/nano-banana"
+    },
+    {
+      "id": "runway-api",
+      "name": "Runway Video Generation",
+      "provider": "Runway",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "runway"
+    },
+    {
+      "id": "suno-api",
+      "name": "Suno API",
+      "provider": "Suno",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 21,
+      "taskTypes": [
+        "Text to Music"
+      ],
+      "category": "audio",
+      "upstreamModel": "ai-music-api/generate"
+    },
+    {
+      "id": "qwen/image-edit",
+      "name": "Qwen Image Edit",
+      "provider": "Qwen",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 1,
+      "taskTypes": [
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "qwen/image-edit"
+    },
+    {
+      "id": "ideogram/character",
+      "name": "Ideogram Character",
+      "provider": "Ideogram",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "ideogram/character"
+    },
+    {
+      "id": "bytedance/seedance-v1",
+      "name": "Seedance V1",
+      "provider": "ByteDance",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 5,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "bytedance/v1-pro-text-to-video"
+    },
+    {
+      "id": "kling/v2-1",
+      "name": "Kling V2.1",
+      "provider": "Kling",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 4,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "kling/v2-1-standard"
+    },
+    {
+      "id": "ideogram/v3",
+      "name": "Ideogram V3",
+      "provider": "Ideogram",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "ideogram/v3-text-to-image"
+    },
+    {
+      "id": "wan/v2-2",
+      "name": "Wan V2.2 A14B",
+      "provider": "Wan",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 2,
+      "taskTypes": [
+        "Text to Video",
+        "Image to Video"
+      ],
+      "category": "video",
+      "upstreamModel": "wan/2-2-a14b-text-to-video-turbo"
+    },
+    {
+      "id": "google/imagen4",
+      "name": "Imagen 4",
+      "provider": "Google",
+      "kind": "generation",
+      "status": "available",
+      "variantCount": 3,
+      "taskTypes": [
+        "Text to Image",
+        "Image to Image"
+      ],
+      "category": "image",
+      "upstreamModel": "google/imagen4"
+    }
+  ]
+}
